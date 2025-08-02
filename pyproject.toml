@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rhoa"
-version = "0.1.1"
+version = "0.1.2"
 description = "A pandas DataFrame extension for technical analysis."
 readme = "README.md"
 license = {text = "GPL-3.0-or-later"}
