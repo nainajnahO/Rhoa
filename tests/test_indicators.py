@@ -1,4 +1,4 @@
-# noor - A pandas DataFrame extension for technical analysis
+# Rhoa - A pandas DataFrame extension for technical analysis
 # Copyright (C) 2025 nainajnahO
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
 
 import pandas as pd
 import unittest
-from noor.indicators import TechnicalSeriesAccessor
+from rhoa.indicators import TechnicalSeriesAccessor
 
 
 class TestTechnicalSeriesAccessor(unittest.TestCase):

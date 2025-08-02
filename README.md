@@ -1,6 +1,6 @@
-# Noor
+# Rhoa
 
-Noor is a Python package providing pandas DataFrame extension accessors for technical analysis.
+Rhoa is a Python package providing pandas DataFrame extension accessors for technical analysis.
 
 ## License
 
@@ -9,5 +9,5 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 ## Installation
 
 ```bash
-pip install noor
+pip install rhoa
 ```

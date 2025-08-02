@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "noor"
+name = "rhoa"
 version = "0.1.0"
 description = "A pandas DataFrame extension for technical analysis."
 readme = "README.md"
@@ -39,4 +39,4 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nainajnahO/Noor.git"
+Homepage = "https://github.com/nainajnahO/Rhoa.git"
