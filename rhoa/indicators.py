@@ -21,8 +21,6 @@ from pandas import DataFrame
 from pandas.api.extensions import register_series_accessor
 
 
-# TODO: Indicators have more arguments than just 'window_size', expand the functions
-#       to allow for better hyper-tuning.
 
 @register_series_accessor("indicators")
 class IndicatorsAccessor:
@@ -30,7 +28,10 @@ class IndicatorsAccessor:
         self._series = series
 
     def sma(self,
-            window_size: int = 20) -> Series:
+            window_size: int = 20,
+            min_periods: int = None,
+            center: bool = False,
+            **kwargs) -> Series:
         """
         Calculate the Simple Moving Average (SMA) over a specified window.
 
@@ -41,13 +42,21 @@ class IndicatorsAccessor:
         :param window_size: The size of the moving window, representing
             the number of periods over which to calculate the average.
         :type window_size: int
+        :param min_periods: Minimum number of observations in window required to have a value.
+        :type min_periods: int
+        :param center: Whether to center the labels in the result.
+        :type center: bool
+        :param kwargs: Additional keyword arguments passed to pandas rolling function.
         :return: A pandas Series containing the calculated SMA values.
         :rtype: Series
         """
-        return self._series.rolling(window_size).mean()
+        return self._series.rolling(window=window_size, min_periods=min_periods, center=center, **kwargs).mean()
 
     def ewma(self,
-             window_size: int = 20) -> Series:
+             window_size: int = 20,
+             adjust: bool = False,
+             min_periods: int = None,
+             **kwargs) -> Series:
         """
         Calculates the Exponential Weighted Moving Average (EWMA) of the series.
 
@@ -59,14 +68,22 @@ class IndicatorsAccessor:
             level of smoothing, where larger values result in smoother trends and slower
             responsiveness to changes in the data.
         :type window_size: int
+        :param adjust: Divide by decaying adjustment factor in beginning periods.
+        :type adjust: bool
+        :param min_periods: Minimum number of observations in window required to have a value.
+        :type min_periods: int
+        :param kwargs: Additional keyword arguments passed to pandas ewm function.
         :return: A pandas Series containing the calculated EWMA values for the input
             series.
         :rtype: Series
         """
-        return self._series.ewm(span=window_size, adjust=False).mean()
+        return self._series.ewm(span=window_size, adjust=adjust, min_periods=min_periods, **kwargs).mean()
 
     def ewmv(self,
-             window_size: int = 20) -> Series:
+             window_size: int = 20,
+             adjust: bool = True,
+             min_periods: int = None,
+             **kwargs) -> Series:
         """
         Calculate the exponentially weighted moving variance (EWMV) of a series.
 
@@ -77,14 +94,22 @@ class IndicatorsAccessor:
         :param window_size: The span of the exponential window. Determines the
             level of smoothing applied to the variance calculation.
         :type window_size: int
+        :param adjust: Divide by decaying adjustment factor in beginning periods.
+        :type adjust: bool
+        :param min_periods: Minimum number of observations in window required to have a value.
+        :type min_periods: int
+        :param kwargs: Additional keyword arguments passed to pandas ewm function.
         :return: A pandas Series containing the exponentially weighted moving
             variance of the input series.
         :rtype: Series
         """
-        return self._series.ewm(span=window_size).var()
+        return self._series.ewm(span=window_size, adjust=adjust, min_periods=min_periods, **kwargs).var()
 
     def ewmstd(self,
-               window_size: int = 20) -> Series:
+               window_size: int = 20,
+               adjust: bool = True,
+               min_periods: int = None,
+               **kwargs) -> Series:
         """
         Calculate the exponentially weighted moving standard deviation (EWMSTD)
         for the given time series data. EWMSTD is a statistical measure that
@@ -102,10 +127,17 @@ class IndicatorsAccessor:
             smoothing applied. A smaller span applies heavier weighting to
             more recent data points, while a larger span applies less
             weighting.
+        :type window_size: int
+        :param adjust: Divide by decaying adjustment factor in beginning periods.
+        :type adjust: bool
+        :param min_periods: Minimum number of observations in window required to have a value.
+        :type min_periods: int
+        :param kwargs: Additional keyword arguments passed to pandas ewm function.
         :return: A new Series containing the exponentially weighted moving
             standard deviation values for the provided time series data.
+        :rtype: Series
         """
-        return self._series.ewm(span=window_size).std()
+        return self._series.ewm(span=window_size, adjust=adjust, min_periods=min_periods, **kwargs).std()
 
     def rsi(
             self,
@@ -189,7 +221,10 @@ class IndicatorsAccessor:
 
     def bollinger_bands(self,
                         window_size: int = 20,
-                        num_std: float = 2.0) -> DataFrame:
+                        num_std: float = 2.0,
+                        min_periods: int = None,
+                        center: bool = False,
+                        **kwargs) -> DataFrame:
         """
         Computes the Bollinger Bands for a given time series.
 
@@ -205,13 +240,19 @@ class IndicatorsAccessor:
         :param num_std: The number of standard deviations to add or subtract from
             the moving average to calculate the upper and lower bands.
         :type num_std: float
+        :param min_periods: Minimum number of observations in window required to have a value.
+        :type min_periods: int
+        :param center: Whether to center the labels in the result.
+        :type center: bool
+        :param kwargs: Additional keyword arguments passed to pandas rolling function.
         :return: A DataFrame containing three columns: `upper_band`, `middle_band`,
             and `lower_band` indexed by the same index as the input series.
+        :rtype: DataFrame
         """
         series = self._series
 
-        middle = series.rolling(window=window_size).mean()
-        std = series.rolling(window=window_size).std()
+        middle = series.rolling(window=window_size, min_periods=min_periods, center=center, **kwargs).mean()
+        std = series.rolling(window=window_size, min_periods=min_periods, center=center, **kwargs).std()
 
         upper = middle + num_std * std
         lower = middle - num_std * std
@@ -225,7 +266,10 @@ class IndicatorsAccessor:
     def atr(self,
             high: Series,
             low: Series,
-            window_size: int = 14) -> Series:
+            window_size: int = 14,
+            min_periods: int = None,
+            center: bool = False,
+            **kwargs) -> Series:
         """
         Calculates the Average True Range (ATR) for a financial time series. ATR is
         a measure of market volatility that takes into account the range between
@@ -244,7 +288,13 @@ class IndicatorsAccessor:
         :param window_size: Integer specifying the length of the rolling window
             for calculating the average true range. Defaults to 14.
         :type window_size: int
+        :param min_periods: Minimum number of observations in window required to have a value.
+        :type min_periods: int
+        :param center: Whether to center the labels in the result.
+        :type center: bool
+        :param kwargs: Additional keyword arguments passed to pandas rolling function.
         :return: A Pandas Series containing the calculated ATR values.
+        :rtype: Series
         """
         close = self._series
 
@@ -253,14 +303,17 @@ class IndicatorsAccessor:
         low_close = (low - close.shift(1)).abs()
 
         true_range = pandas.concat([high_low, high_close, low_close], axis=1).max(axis=1)
-        atr = true_range.rolling(window=window_size).mean()
+        atr = true_range.rolling(window=window_size, min_periods=min_periods, center=center, **kwargs).mean()
 
         return atr
 
     def cci(self,
             high: Series,
             low: Series,
-            window_size: int = 20) -> Series:
+            window_size: int = 20,
+            min_periods: int = None,
+            center: bool = False,
+            **kwargs) -> Series:
         """
         Calculates the Commodity Channel Index (CCI) for the given time series data.
 
@@ -276,15 +329,20 @@ class IndicatorsAccessor:
         :param window_size: Integer representing the number of periods to be considered
             for calculating the CCI. The default is 20.
         :type window_size: int
+        :param min_periods: Minimum number of observations in window required to have a value.
+        :type min_periods: int
+        :param center: Whether to center the labels in the result.
+        :type center: bool
+        :param kwargs: Additional keyword arguments passed to pandas rolling function.
         :return: A pandas Series representing the calculated CCI values.
         :rtype: Series
         """
         close = self._series
         typical_price = (high + low + close) / 3
 
-        sma = typical_price.rolling(window=window_size).mean()
+        sma = typical_price.rolling(window=window_size, min_periods=min_periods, center=center, **kwargs).mean()
 
-        mean_deviation = typical_price.rolling(window=window_size).apply(
+        mean_deviation = typical_price.rolling(window=window_size, min_periods=min_periods, center=center, **kwargs).apply(
             lambda x: numpy.mean(numpy.abs(x - x.mean())),
             raw=True
         )
