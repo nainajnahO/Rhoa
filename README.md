@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="Media/logo.png" alt="Rhoa Logo" width="960" style="margin-bottom: -30px;"/>
+  <img src="media/logo.png" alt="Rhoa Logo" width="960" style="margin-bottom: -30px;"/>
 
   [![Development Status](https://img.shields.io/badge/status-pre--alpha-red)](https://github.com/nainajnahO/Rhoa)
   [![PyPI version](https://img.shields.io/pypi/v/rhoa)](https://pypi.org/project/rhoa/)
