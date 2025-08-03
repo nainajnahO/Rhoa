@@ -109,7 +109,8 @@ class IndicatorsAccessor:
 
     def rsi(
             self,
-            window_size: int = 14) -> Series:
+            window_size: int = 14,
+            edge_case_value: float = 100.0) -> Series:
         """
         Calculates the Relative Strength Index (RSI) for a given price series using
         a specified window size. RSI is a momentum oscillator that measures the speed
@@ -120,6 +121,9 @@ class IndicatorsAccessor:
         :param window_size: The size of the rolling window used to calculate the moving
             averages of gains and losses. Default value is 14.
         :type window_size: int
+        :param edge_case_value: The RSI value to use when avg_loss == 0 (no losses).
+            Common values: 100.0 (infinite RS, default), 50.0 (neutral), or float('nan').
+        :type edge_case_value: float
         :return: A pandas Series object containing the RSI values for the price series.
         :rtype: Series
         """
@@ -135,8 +139,8 @@ class IndicatorsAccessor:
         rs = avg_gain / avg_loss
         rsi = 100 - (100 / (1 + rs))
 
-        # when avg_loss == 0, RSI should be 100 (infinite RS)
-        rsi[avg_loss == 0] = 100
+        # Handle edge case when avg_loss == 0 (division by zero)
+        rsi[avg_loss == 0] = edge_case_value
 
         return rsi
 
