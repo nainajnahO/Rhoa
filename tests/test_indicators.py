@@ -11,7 +11,7 @@ class TestIndicatorsAccessor(TestCase):
     def setUpClass(cls):
         """Load test data once for all tests"""
         # Load real market data
-        csv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data.csv')
+        csv_path = os.path.join(os.path.dirname(__file__), 'data.csv')
         cls.df = pd.read_csv(csv_path)
         cls.df['Date'] = pd.to_datetime(cls.df['Date'])
         cls.df.set_index('Date', inplace=True)
