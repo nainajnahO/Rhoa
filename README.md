@@ -1,6 +1,6 @@
 # Rhoa
 
-[![Development Status](https://img.shields.io/badge/status-alpha-red)](https://github.com/nainajnahO/Rhoa)
+[![Development Status](https://img.shields.io/badge/status-pre--alpha-red)](https://github.com/nainajnahO/Rhoa)
 [![PyPI version](https://img.shields.io/pypi/v/rhoa)](https://pypi.org/project/rhoa/)
 [![License](https://img.shields.io/pypi/l/rhoa)](https://github.com/nainajnahO/Rhoa/blob/main/LICENSE)
 [![Python versions](https://img.shields.io/pypi/pyversions/rhoa)](https://pypi.org/project/rhoa/)
