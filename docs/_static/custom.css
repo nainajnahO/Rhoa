@@ -1,0 +1,35 @@
+/* Custom styles for Rhoa documentation */
+
+/* Logo styling */
+.wy-side-nav-search .logo {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+/* Main page logo styling */
+.document img {
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced navigation header */
+.wy-side-nav-search {
+    background: linear-gradient(135deg, #2980B9 0%, #3498DB 100%);
+}
+
+/* Code block enhancements */
+.highlight pre {
+    border-radius: 4px;
+    border-left: 4px solid #2980B9;
+}
+
+/* Note and example blocks */
+.admonition.note {
+    border-left: 4px solid #2980B9;
+}
+
+.admonition.example {
+    border-left: 4px solid #27AE60;
+}
