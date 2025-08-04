@@ -69,6 +69,10 @@ autodoc_default_options = {
     'exclude-members': '__weakref__'
 }
 
+# Clean up index display
+add_module_names = False
+autodoc_typehints = 'description'
+
 # Intersphinx mapping
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
