@@ -5,6 +5,9 @@
     max-width: 100%;
     height: auto;
     margin-bottom: 10px;
+    padding: 15px 10px;
+    transform: scale(1.3);
+    transform-origin: center;
 }
 
 /* Main page logo styling */
@@ -28,9 +31,11 @@
     margin-top: 20px;
 }
 
-/* Enhanced navigation header */
+/* Enhanced navigation header with larger logo support */
 .wy-side-nav-search {
     background: linear-gradient(135deg, #2980B9 0%, #3498DB 100%);
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
 
 /* Code block enhancements */
