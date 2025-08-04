@@ -73,6 +73,17 @@ autodoc_default_options = {
 add_module_names = False
 autodoc_typehints = 'description'
 
+# Remove class names from method index entries
+python_use_unqualified_type_names = True
+
+# Custom index formatting
+def process_docstring(app, what, name, obj, options, lines):
+    """Clean up docstrings for index"""
+    return
+
+def setup(app):
+    app.connect('autodoc-process-docstring', process_docstring)
+
 # Intersphinx mapping
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
