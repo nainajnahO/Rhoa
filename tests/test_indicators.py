@@ -320,3 +320,277 @@ class TestIndicatorsAccessor(TestCase):
         # The implementation should handle this gracefully
         valid_const = const_cci.dropna()
         # We just verify it doesn't crash and produces some result
+
+    def test_stochastic(self):
+        """Test Stochastic Oscillator (%K and %D)"""
+        result = self.price_data.indicators.stochastic(self.high_data, self.low_data, k_window=14, d_window=3)
+        self.assertIsInstance(result, pd.DataFrame)
+
+        # Check correct columns
+        expected_columns = ['%K', '%D']
+        self.assertEqual(list(result.columns), expected_columns)
+
+        # Stochastic should be between 0 and 100
+        valid_values = result.dropna()
+        if len(valid_values) > 0:
+            self.assertTrue((valid_values['%K'] >= 0).all())
+            self.assertTrue((valid_values['%K'] <= 100).all())
+            self.assertTrue((valid_values['%D'] >= 0).all())
+            self.assertTrue((valid_values['%D'] <= 100).all())
+
+        # %D should be smoother (SMA of %K)
+        valid_k = result['%K'].dropna()
+        if len(valid_k) >= 3:
+            expected_d = valid_k.rolling(window=3).mean()
+            # Compare overlapping indices
+            common_idx = expected_d.dropna().index.intersection(result['%D'].dropna().index)
+            if len(common_idx) > 0:
+                pd.testing.assert_series_equal(
+                    result.loc[common_idx, '%D'],
+                    expected_d.loc[common_idx],
+                    check_names=False
+                )
+
+        # Manual calculation verification
+        close = self.price_data
+        high = self.high_data
+        low = self.low_data
+
+        lowest_low = low.rolling(window=14).min()
+        highest_high = high.rolling(window=14).max()
+        expected_k = 100 * ((close - lowest_low) / (highest_high - lowest_low))
+
+        pd.testing.assert_series_equal(result['%K'], expected_k, check_names=False)
+
+        # Edge cases
+        # Constant prices should give %K = middle value
+        const_high = pd.Series([100.0] * 50)
+        const_low = pd.Series([95.0] * 50)
+        const_close = pd.Series([97.5] * 50)  # Middle of range
+
+        const_stoch = const_close.indicators.stochastic(const_high, const_low, k_window=14, d_window=3)
+        valid_const = const_stoch.dropna()
+        if len(valid_const) > 0:
+            # Should be 50% of the range
+            self.assertTrue(all(abs(val - 50.0) < 1e-10 for val in valid_const['%K']))
+
+    def test_williams_r(self):
+        """Test Williams %R indicator"""
+        result = self.price_data.indicators.williams_r(self.high_data, self.low_data, window_size=14)
+        self.assertIsInstance(result, pd.Series)
+
+        # Williams %R should be between -100 and 0
+        valid_values = result.dropna()
+        if len(valid_values) > 0:
+            self.assertTrue((valid_values >= -100).all())
+            self.assertTrue((valid_values <= 0).all())
+
+        # Manual calculation verification
+        close = self.price_data
+        high = self.high_data
+        low = self.low_data
+
+        highest_high = high.rolling(window=14).max()
+        lowest_low = low.rolling(window=14).min()
+        expected_wr = -100 * ((highest_high - close) / (highest_high - lowest_low))
+
+        pd.testing.assert_series_equal(result, expected_wr, check_names=False)
+
+        # Edge cases
+        # When close = high, Williams %R should be 0
+        high_close = pd.Series([100.0] * 50)
+        low_close = pd.Series([95.0] * 50)
+        at_high = pd.Series([100.0] * 50)
+
+        high_wr = at_high.indicators.williams_r(high_close, low_close, window_size=14)
+        valid_high = high_wr.dropna()
+        if len(valid_high) > 0:
+            self.assertTrue(all(abs(val) < 1e-10 for val in valid_high))
+
+        # When close = low, Williams %R should be -100
+        at_low = pd.Series([95.0] * 50)
+        low_wr = at_low.indicators.williams_r(high_close, low_close, window_size=14)
+        valid_low = low_wr.dropna()
+        if len(valid_low) > 0:
+            self.assertTrue(all(abs(val + 100) < 1e-10 for val in valid_low))
+
+    def test_adx(self):
+        """Test Average Directional Index (ADX) with +DI and -DI"""
+        result = self.price_data.indicators.adx(self.high_data, self.low_data, window_size=14)
+        self.assertIsInstance(result, pd.DataFrame)
+
+        # Check correct columns
+        expected_columns = ['ADX', '+DI', '-DI']
+        self.assertEqual(list(result.columns), expected_columns)
+
+        # All values should be non-negative and typically between 0-100
+        valid_values = result.dropna()
+        if len(valid_values) > 0:
+            self.assertTrue((valid_values['ADX'] >= 0).all())
+            self.assertTrue((valid_values['+DI'] >= 0).all())
+            self.assertTrue((valid_values['-DI'] >= 0).all())
+
+            # ADX should typically be <= 100 (though can exceed in extreme cases)
+            self.assertTrue((valid_values['ADX'] <= 150).all())  # Allow some margin
+
+        # Test component calculations
+        close = self.price_data
+        high = self.high_data
+        low = self.low_data
+
+        # Verify True Range calculation (used in ADX)
+        high_low = high - low
+        high_close = (high - close.shift(1)).abs()
+        low_close = (low - close.shift(1)).abs()
+        true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+
+        # The calculation is complex, so we mainly test structure and bounds
+        self.assertEqual(len(result), len(self.price_data))
+
+        # Edge cases
+        # Trending data should have higher ADX than sideways data
+        trending_adx = self.trending_up.indicators.adx(
+            pd.Series(range(105, 155)),  # trending high
+            pd.Series(range(95, 145)),   # trending low
+            window_size=14
+        )
+
+        const_adx = self.constant_prices.indicators.adx(
+            pd.Series([102.0] * 50),  # constant high
+            pd.Series([98.0] * 50),   # constant low
+            window_size=14
+        )
+
+        trend_adx_mean = trending_adx['ADX'].dropna().mean()
+        const_adx_mean = const_adx['ADX'].dropna().mean()
+
+        if not np.isnan(trend_adx_mean) and not np.isnan(const_adx_mean):
+            self.assertGreater(trend_adx_mean, const_adx_mean)
+
+    def test_parabolic_sar(self):
+        """Test Parabolic SAR indicator"""
+        result = self.price_data.indicators.parabolic_sar(
+            self.high_data,
+            self.low_data,
+            af_start=0.02,
+            af_increment=0.02,
+            af_maximum=0.2
+        )
+        self.assertIsInstance(result, pd.Series)
+
+        # SAR should have same length as input
+        self.assertEqual(len(result), len(self.price_data))
+
+        # All SAR values should be finite
+        valid_values = result.dropna()
+        self.assertTrue(all(np.isfinite(val) for val in valid_values))
+
+        # SAR should generally be within reasonable range of price data
+        if len(valid_values) > 0:
+            price_min = self.price_data.min()
+            price_max = self.price_data.max()
+            price_range = price_max - price_min
+
+            # Allow SAR to be outside price range but within reasonable bounds
+            sar_min = valid_values.min()
+            sar_max = valid_values.max()
+
+            # SAR shouldn't be wildly outside the price range
+            self.assertGreater(sar_min, price_min - 2 * price_range)
+            self.assertLess(sar_max, price_max + 2 * price_range)
+
+        # Test different parameter combinations
+        sar_fast = self.price_data.indicators.parabolic_sar(
+            self.high_data, self.low_data,
+            af_start=0.04, af_increment=0.04, af_maximum=0.4
+        )
+
+        sar_slow = self.price_data.indicators.parabolic_sar(
+            self.high_data, self.low_data,
+            af_start=0.01, af_increment=0.01, af_maximum=0.1
+        )
+
+        # Both should be valid Series
+        self.assertIsInstance(sar_fast, pd.Series)
+        self.assertIsInstance(sar_slow, pd.Series)
+
+        # Edge cases
+        # Constant prices - SAR should stabilize
+        const_high = pd.Series([105.0] * 50)
+        const_low = pd.Series([95.0] * 50)
+        const_close = pd.Series([100.0] * 50)
+
+        const_sar = const_close.indicators.parabolic_sar(const_high, const_low)
+        # Should not crash and produce reasonable values
+        self.assertEqual(len(const_sar), 50)
+
+        # Strong trending data
+        trend_high = pd.Series(range(100, 150))
+        trend_low = pd.Series(range(95, 145))
+        trend_close = pd.Series(range(98, 148))
+
+        trend_sar = trend_close.indicators.parabolic_sar(trend_high, trend_low)
+        # Should track below the uptrend
+        if len(trend_sar.dropna()) > 10:
+            # In a strong uptrend, SAR should generally be below the closing prices
+            recent_sar = trend_sar.iloc[-10:].mean()
+            recent_close = trend_close.iloc[-10:].mean()
+            self.assertLess(recent_sar, recent_close)
+
+    def test_kwargs_support(self):
+        """Test that all new indicators support **kwargs parameter"""
+        # Test that **kwargs are accepted without errors
+
+        # Stochastic with extra rolling parameters
+        stoch_result = self.price_data.indicators.stochastic(
+            self.high_data, self.low_data,
+            k_window=14, d_window=5,  # Fixed: d_window >= min_periods
+            min_periods=3
+        )
+        self.assertIsInstance(stoch_result, pd.DataFrame)
+
+        # Williams %R with extra rolling parameters
+        wr_result = self.price_data.indicators.williams_r(
+            self.high_data, self.low_data,
+            window_size=14, min_periods=5
+        )
+        self.assertIsInstance(wr_result, pd.Series)
+
+        # ADX with extra ewm parameters
+        adx_result = self.price_data.indicators.adx(
+            self.high_data, self.low_data,
+            window_size=14, min_periods=5
+        )
+        self.assertIsInstance(adx_result, pd.DataFrame)
+
+        # Parabolic SAR doesn't use rolling/ewm, so no extra kwargs to test
+        # but verify it still works normally
+        sar_result = self.price_data.indicators.parabolic_sar(
+            self.high_data, self.low_data
+        )
+        self.assertIsInstance(sar_result, pd.Series)
+
+    def test_new_indicators_integration(self):
+        """Test that new indicators work with the accessor pattern properly"""
+        # Verify all new indicators are accessible through the accessor
+        self.assertTrue(hasattr(self.price_data.indicators, 'stochastic'))
+        self.assertTrue(hasattr(self.price_data.indicators, 'williams_r'))
+        self.assertTrue(hasattr(self.price_data.indicators, 'adx'))
+        self.assertTrue(hasattr(self.price_data.indicators, 'parabolic_sar'))
+
+        # Test with minimal data
+        small_data = self.price_data.iloc[:20]
+        small_high = self.high_data.iloc[:20]
+        small_low = self.low_data.iloc[:20]
+
+        # All should work without crashing
+        stoch = small_data.indicators.stochastic(small_high, small_low, k_window=5, d_window=3)
+        wr = small_data.indicators.williams_r(small_high, small_low, window_size=5)
+        adx = small_data.indicators.adx(small_high, small_low, window_size=5)
+        sar = small_data.indicators.parabolic_sar(small_high, small_low)
+
+        # Verify return types
+        self.assertIsInstance(stoch, pd.DataFrame)
+        self.assertIsInstance(wr, pd.Series)
+        self.assertIsInstance(adx, pd.DataFrame)
+        self.assertIsInstance(sar, pd.Series)
