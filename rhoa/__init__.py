@@ -17,5 +17,5 @@
 __version__ = "0.1.3"
 
 from .preprocess import PreprocessAccessor
-from .indicators import IndicatorsAccessor
+from .indicators import indicators
 from . import data

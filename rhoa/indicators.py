@@ -34,7 +34,7 @@ from pandas.api.extensions import register_series_accessor
 
 
 @register_series_accessor("indicators")
-class IndicatorsAccessor:
+class indicators:
     def __init__(self, series: Series) -> None:
         self._series = series
 
