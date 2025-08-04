@@ -1,7 +1,8 @@
-.. image:: _static/logo.png
-   :width: 400px
-   :align: left
-   :alt: Rhoa Logo
+.. raw:: html
+
+   <div class="logo-container">
+      <img src="_static/logo.png" alt="Rhoa Logo" class="main-logo" />
+   </div>
 
 Rhoa Documentation
 ==================

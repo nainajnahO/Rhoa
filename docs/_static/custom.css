@@ -8,10 +8,24 @@
 }
 
 /* Main page logo styling */
-.document img {
-    margin: 20px 0;
+.logo-container {
+    margin: 20px 0 30px 0;
+    text-align: left;
+}
+
+.main-logo {
+    width: 400px;
+    max-width: 100%;
+    height: auto;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: block;
+}
+
+/* Ensure content starts below logo */
+.logo-container + h1 {
+    clear: both;
+    margin-top: 20px;
 }
 
 /* Enhanced navigation header */
