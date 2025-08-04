@@ -47,3 +47,14 @@
 .admonition.example {
     border-left: 4px solid #27AE60;
 }
+
+/* Clean up index entries - hide class names */
+.genindex-jumpbox + dl dt em,
+.genindex-jumpbox + ul li dl dt em {
+    display: none;
+}
+
+/* Alternative approach for method index entries */
+dt .sig-paren + em {
+    display: none;
+}
