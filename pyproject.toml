@@ -45,6 +45,8 @@ docs = [
 
 [project.urls]
 Homepage = "https://github.com/nainajnahO/Rhoa.git"
+Documentation = "https://nainajnaho.github.io/Rhoa/"
+
 
 [tool.setuptools.packages.find]
 include = ["rhoa*"]

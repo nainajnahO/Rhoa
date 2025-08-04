@@ -69,20 +69,11 @@ autodoc_default_options = {
     'exclude-members': '__weakref__'
 }
 
-# Clean up index display
-add_module_names = False
+# Standard Sphinx autodoc settings
 autodoc_typehints = 'description'
 
-# Remove class names from method index entries
-python_use_unqualified_type_names = True
-
-# Custom index formatting
-def process_docstring(app, what, name, obj, options, lines):
-    """Clean up docstrings for index"""
-    return
-
-def setup(app):
-    app.connect('autodoc-process-docstring', process_docstring)
+# Autosummary settings
+autosummary_generate = True
 
 # Intersphinx mapping
 intersphinx_mapping = {

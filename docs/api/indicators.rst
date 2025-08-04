@@ -1,56 +1,49 @@
-Indicators Module
-=================
+rhoa.indicators module
+======================
 
-The indicators module provides technical analysis indicators through pandas Series accessor.
-
-.. currentmodule:: rhoa.indicators
-
-IndicatorsAccessor
-------------------
-
-.. autoclass:: IndicatorsAccessor
+.. automodule:: rhoa.indicators
    :members:
    :undoc-members:
    :show-inheritance:
 
-Moving Averages
----------------
+The indicators module provides technical analysis indicators through pandas Series accessor.
 
-.. automethod:: IndicatorsAccessor.sma
-   :noindex:
-.. automethod:: IndicatorsAccessor.ewma
-   :noindex:
-.. automethod:: IndicatorsAccessor.ewmv
-   :noindex:
-.. automethod:: IndicatorsAccessor.ewmstd
-   :noindex:
+IndicatorsAccessor Class
+------------------------
+
+.. autoclass:: rhoa.indicators.IndicatorsAccessor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Function Reference
+------------------
+
+Moving Averages
+~~~~~~~~~~~~~~~
+
+.. autofunction:: rhoa.indicators.IndicatorsAccessor.sma
+.. autofunction:: rhoa.indicators.IndicatorsAccessor.ewma  
+.. autofunction:: rhoa.indicators.IndicatorsAccessor.ewmv
+.. autofunction:: rhoa.indicators.IndicatorsAccessor.ewmstd
 
 Momentum Oscillators
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
-.. automethod:: IndicatorsAccessor.rsi
-   :noindex:
-.. automethod:: IndicatorsAccessor.stochastic
-   :noindex:
-.. automethod:: IndicatorsAccessor.williams_r
-   :noindex:
-.. automethod:: IndicatorsAccessor.cci
-   :noindex:
+.. autofunction:: rhoa.indicators.IndicatorsAccessor.rsi
+.. autofunction:: rhoa.indicators.IndicatorsAccessor.stochastic
+.. autofunction:: rhoa.indicators.IndicatorsAccessor.williams_r
+.. autofunction:: rhoa.indicators.IndicatorsAccessor.cci
 
 Trend Indicators
-----------------
+~~~~~~~~~~~~~~~~
 
-.. automethod:: IndicatorsAccessor.macd
-   :noindex:
-.. automethod:: IndicatorsAccessor.adx
-   :noindex:
-.. automethod:: IndicatorsAccessor.parabolic_sar
-   :noindex:
+.. autofunction:: rhoa.indicators.IndicatorsAccessor.macd
+.. autofunction:: rhoa.indicators.IndicatorsAccessor.adx
+.. autofunction:: rhoa.indicators.IndicatorsAccessor.parabolic_sar
 
 Volatility Indicators
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
-.. automethod:: IndicatorsAccessor.bollinger_bands
-   :noindex:
-.. automethod:: IndicatorsAccessor.atr
-   :noindex:
+.. autofunction:: rhoa.indicators.IndicatorsAccessor.bollinger_bands
+.. autofunction:: rhoa.indicators.IndicatorsAccessor.atr
