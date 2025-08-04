@@ -34,7 +34,7 @@ html_static_path = ['_static']
 # Logo configuration
 html_logo = '_static/logo.png'
 html_theme_options = {
-    'logo_only': False,
+    'logo_only': True,
     'display_version': True,
     'style_nav_header_background': '#2980B9',
 }
