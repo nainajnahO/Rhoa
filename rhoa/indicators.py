@@ -14,64 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-  Suggestions for Improvement
+# 2. Enhanced Functionality
+#
+## Add volume-based indicators
+#def obv(self, volume: Series) -> Series:  # On-Balance Volume
+#def vwap(self, volume: Series, high: Series, low: Series) -> Series:  # VWAP
 
-  1. Package Structure & Organization
+## Add pattern recognition
+#def detect_patterns(self) -> DataFrame:  # Common candlestick patterns
 
-  - Empty files: rhoa/targets.py is empty - either implement or remove
-  - Unused preprocess module: PreprocessAccessor is imported but minimal - expand or remove
-  - Consider submodules: As you add more indicators, organize by category (momentum, trend, volatility)
-
-  2. Enhanced Functionality
-
-  # Add volume-based indicators
-  def obv(self, volume: Series) -> Series:  # On-Balance Volume
-  def vwap(self, volume: Series, high: Series, low: Series) -> Series:  # VWAP
-
-  # Add pattern recognition
-  def detect_patterns(self) -> DataFrame:  # Common candlestick patterns
-
-  # Add multiple timeframe support
-  def resample_indicator(self, timeframe: str, indicator: str, **kwargs):
-
-
-  5. Documentation & Examples
-
-  - Usage examples: Add practical examples to README
-  - Jupyter notebooks: Create tutorial notebooks
-  - API reference: Consider Sphinx documentation
-
-  6. Dependencies & Distribution
-
-  - Add numpy explicitly to dependencies (currently imported but not listed)
-  - Version constraints: Consider maximum versions for dependencies
-  - Optional dependencies: Separate plotting/visualization dependencies
-
-  7. Code Quality Improvements
-
-  # Add type hints throughout
-  from typing import Optional, Union
-  def sma(self, window_size: int = 20, min_periods: Optional[int] = None) -> Series:
-
-  # Add validation decorators
-  @validate_window_size
-  @validate_series_length
-  def indicator_method(self, ...):
-
-  8. Testing Enhancements
-
-  - Performance benchmarks: Add timing tests
-  - Property-based testing: Use hypothesis for edge case generation
-  - Integration tests: Test full workflows
-
-  9. Additional Features
-
-  - Signal generation: Add buy/sell signal detection
-  - Backtesting utilities: Basic strategy testing framework
-  - Plotting integration: Integration with matplotlib/plotly
-  - Data export: Export indicators to various formats
-"""
+## Add multiple timeframe support
+#def resample_indicator(self, timeframe: str, indicator: str, **kwargs):
 
 import pandas
 import numpy

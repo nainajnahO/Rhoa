@@ -1,3 +1,8 @@
+.. image:: _static/logo.png
+   :width: 400px
+   :align: center
+   :alt: Rhoa Logo
+
 Rhoa Documentation
 ==================
 

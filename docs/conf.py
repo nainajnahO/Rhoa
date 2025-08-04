@@ -31,6 +31,17 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
+# Logo configuration
+html_logo = '_static/logo.png'
+html_theme_options = {
+    'logo_only': False,
+    'display_version': True,
+    'style_nav_header_background': '#2980B9',
+}
+
+# Custom CSS
+html_css_files = ['custom.css']
+
 # -- Extension configuration -------------------------------------------------
 
 # Napoleon settings
