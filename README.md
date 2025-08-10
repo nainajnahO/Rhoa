@@ -3,6 +3,8 @@
 
   [![Development Status](https://img.shields.io/badge/status-pre--alpha-red)](https://github.com/nainajnahO/Rhoa)
   [![PyPI version](https://img.shields.io/pypi/v/rhoa)](https://pypi.org/project/rhoa/)
+  [![Tests](https://github.com/nainajnahO/Rhoa/workflows/Tests/badge.svg)](https://github.com/nainajnahO/Rhoa/actions/workflows/test.yml)
+  [![codecov](https://codecov.io/gh/nainajnahO/Rhoa/branch/main/graph/badge.svg)](https://codecov.io/gh/nainajnahO/Rhoa)
   [![Documentation](https://img.shields.io/badge/docs-available-brightgreen)](https://nainajnaho.github.io/Rhoa/)
   [![License](https://img.shields.io/pypi/l/rhoa)](https://github.com/nainajnahO/Rhoa/blob/main/LICENSE)
   [![Python versions](https://img.shields.io/pypi/pyversions/rhoa)](https://pypi.org/project/rhoa/)
