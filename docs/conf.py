@@ -72,6 +72,12 @@ autodoc_default_options = {
 # Standard Sphinx autodoc settings
 autodoc_typehints = 'description'
 
+# Show shorter, user-facing names in documentation
+add_module_names = False
+
+# Use qualified names relative to the package root
+autodoc_class_signature = 'separated'
+
 # Autosummary settings
 autosummary_generate = True
 
