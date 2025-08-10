@@ -28,7 +28,7 @@ jobs:
     
     - name: Run tests with coverage
       run: |
-        pytest --cov=rhoa --cov-report=xml --cov-report=term-missing
+        pytest tests/ --cov=rhoa --cov-report=xml --cov-report=term-missing -v
     
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
