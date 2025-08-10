@@ -78,6 +78,12 @@ add_module_names = False
 # Use qualified names relative to the package root
 autodoc_class_signature = 'separated'
 
+# Remove common module prefix from index entries
+modindex_common_prefix = ['rhoa.']
+
+# Clean up index entries by removing verbose module information
+html_domain_indices = True
+
 # Autosummary settings
 autosummary_generate = True
 
