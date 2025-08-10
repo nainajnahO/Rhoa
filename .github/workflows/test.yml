@@ -11,7 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full git history for Codecov accuracy
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v4
@@ -34,6 +37,11 @@ jobs:
             -v
           ls -la coverage.xml  # Debug check
 
+      - name: Show commit SHA for debug
+        run: |
+          echo "GITHUB_SHA: $GITHUB_SHA"
+          git rev-parse HEAD
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
@@ -41,3 +49,6 @@ jobs:
           flags: unittests
           verbose: true
           fail_ci_if_error: true
+          commit_sha: ${{ github.sha }}
+          branch: ${{ github.ref_name }}
+
