@@ -5,6 +5,7 @@ import rhoa.indicators
 import os
 
 
+
 class TestIndicatorsAccessor(TestCase):
 
     @classmethod
