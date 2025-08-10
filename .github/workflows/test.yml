@@ -34,7 +34,6 @@ jobs:
             --cov-report=html \
             --cov-report=term-missing \
             --cov-branch \
-            --cov-fail-under=0 \
             -v
           ls -la coverage.xml  # Debug check
 
