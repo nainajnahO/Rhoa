@@ -5,7 +5,7 @@
   [![PyPI version](https://img.shields.io/pypi/v/rhoa)](https://pypi.org/project/rhoa/)
   [![Documentation](https://img.shields.io/badge/docs-available-brightgreen)](https://nainajnaho.github.io/Rhoa/)
   [![License](https://img.shields.io/pypi/l/rhoa)](https://github.com/nainajnahO/Rhoa/blob/main/LICENSE)
-  [![Python versions](https://img.shields.io/pypi/pyversions/rhoa)](https://pypi.org/project/rhoa/)
+  [![Python versions](https://img.shields.io/pypi/pyversions/rhoa)](okhttps://pypi.org/project/rhoa/)
 
   **Rhoa is a Python package providing functions and pandas DataFrame extension accessors for technical analysis.**
 </div>
