@@ -52,3 +52,10 @@ jobs:
           title: Coverage Report
           badge-title: Coverage
 
+      - name: Report coverage to GitHub
+        uses: 5monkeys/cobertura-action@master
+        with:
+          path: coverage.xml
+          minimum_coverage: 70
+          fail_below_threshold: false
+
