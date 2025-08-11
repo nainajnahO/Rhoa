@@ -13,8 +13,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Full git history for Codecov accuracy
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v4
@@ -37,18 +35,20 @@ jobs:
             -v
           ls -la coverage.xml  # Debug check
 
-      - name: Show commit SHA for debug
-        run: |
-          echo "GITHUB_SHA: $GITHUB_SHA"
-          git rev-parse HEAD
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+      - name: Upload coverage reports as artifact
+        uses: actions/upload-artifact@v4
         with:
-          files: ./coverage.xml
-          flags: unittests
-          verbose: true
-          fail_ci_if_error: true
-          commit_sha: ${{ github.sha }}
-          branch: ${{ github.ref_name }}
+          name: coverage-report
+          path: |
+            coverage.xml
+            htmlcov/
+          retention-days: 30
+
+      - name: Coverage comment
+        uses: MishaKav/pytest-coverage-comment@main
+        if: github.event_name == 'pull_request'
+        with:
+          pytest-xml-coverage-path: ./coverage.xml
+          title: Coverage Report
+          badge-title: Coverage
 
