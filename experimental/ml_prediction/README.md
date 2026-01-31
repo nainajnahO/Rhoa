@@ -2,6 +2,9 @@
 
 This folder contains a trained neural network model that achieves **100% precision** (3 true positives, 0 false positives) for stock prediction.
 
+**📈 Want to capture more true positives while maintaining 90-100% precision?**  
+See **[IMPROVEMENTS_GUIDE.md](IMPROVEMENTS_GUIDE.md)** for instructions on training with multi-stock data.
+
 ## Model Performance
 
 | Threshold | Precision | Recall | Signals | Correct | Wrong |

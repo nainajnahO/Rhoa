@@ -164,6 +164,120 @@ def time_series_split(
     return train_df, val_df, test_df
 
 
+def time_series_split_multi_stock(
+    df: pd.DataFrame,
+    stock_col: str = 'stock_id',
+    train_ratio: float = None,
+    val_ratio: float = None,
+    test_ratio: float = None,
+    holdout_stocks: Optional[List[str]] = None
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Split multi-stock data into train/validation/test sets respecting time order within each stock.
+    
+    This function ensures:
+    1. Each stock is split in chronological order (no data leakage within stock)
+    2. Optional: Some stocks can be held out entirely for testing (cross-stock generalization)
+    3. Class distribution is preserved across splits
+    
+    Args:
+        df: DataFrame with multi-stock data (must have stock_col column)
+        stock_col: Name of the column containing stock identifiers
+        train_ratio: Proportion for training (default from SPLIT_CONFIG)
+        val_ratio: Proportion for validation (default from SPLIT_CONFIG)
+        test_ratio: Proportion for test (default from SPLIT_CONFIG)
+        holdout_stocks: Optional list of stock IDs to reserve entirely for test set
+        
+    Returns:
+        Tuple of (train_df, val_df, test_df)
+        
+    Example:
+        >>> # Each stock split 70/15/15
+        >>> train, val, test = time_series_split_multi_stock(df, 'stock_id')
+        
+        >>> # Hold out specific stocks for testing
+        >>> train, val, test = time_series_split_multi_stock(
+        ...     df, 'stock_id', holdout_stocks=['AAPL', 'MSFT']
+        ... )
+    """
+    config = SPLIT_CONFIG
+    train_ratio = train_ratio or config.get('train_ratio', 0.70)
+    val_ratio = val_ratio or config.get('val_ratio', 0.15)
+    test_ratio = test_ratio or config.get('test_ratio', 0.15)
+    
+    # Validate ratios
+    total_ratio = train_ratio + val_ratio + test_ratio
+    if not np.isclose(total_ratio, 1.0):
+        raise ValueError(f"Ratios must sum to 1.0, got {total_ratio}")
+    
+    # Check if stock_col exists
+    if stock_col not in df.columns:
+        raise ValueError(f"Column '{stock_col}' not found in DataFrame")
+    
+    # Get unique stocks
+    all_stocks = df[stock_col].unique()
+    
+    # Handle holdout stocks
+    if holdout_stocks:
+        holdout_set = set(holdout_stocks)
+        training_stocks = [s for s in all_stocks if s not in holdout_set]
+        
+        # Validate holdout stocks exist
+        missing_stocks = holdout_set - set(all_stocks)
+        if missing_stocks:
+            raise ValueError(f"Holdout stocks not found in data: {missing_stocks}")
+        
+        print(f"Using {len(training_stocks)} stocks for train/val, {len(holdout_stocks)} stocks held out for test")
+        
+        # Split training stocks normally
+        train_dfs = []
+        val_dfs = []
+        
+        for stock in training_stocks:
+            stock_df = df[df[stock_col] == stock].copy()
+            n = len(stock_df)
+            train_end = int(n * train_ratio / (train_ratio + val_ratio))
+            
+            train_dfs.append(stock_df.iloc[:train_end])
+            val_dfs.append(stock_df.iloc[train_end:])
+        
+        # All holdout stocks go to test
+        test_dfs = [df[df[stock_col] == stock].copy() for stock in holdout_stocks]
+        
+        train_df = pd.concat(train_dfs, ignore_index=True)
+        val_df = pd.concat(val_dfs, ignore_index=True)
+        test_df = pd.concat(test_dfs, ignore_index=True)
+        
+    else:
+        # Split each stock according to ratios
+        train_dfs = []
+        val_dfs = []
+        test_dfs = []
+        
+        for stock in all_stocks:
+            stock_df = df[df[stock_col] == stock].copy()
+            n = len(stock_df)
+            
+            train_end = int(n * train_ratio)
+            val_end = train_end + int(n * val_ratio)
+            
+            train_dfs.append(stock_df.iloc[:train_end])
+            val_dfs.append(stock_df.iloc[train_end:val_end])
+            test_dfs.append(stock_df.iloc[val_end:])
+        
+        train_df = pd.concat(train_dfs, ignore_index=True)
+        val_df = pd.concat(val_dfs, ignore_index=True)
+        test_df = pd.concat(test_dfs, ignore_index=True)
+    
+    # Print split summary
+    print(f"\nMulti-stock split summary:")
+    print(f"  Train: {len(train_df)} samples from {train_df[stock_col].nunique()} stocks")
+    print(f"  Val:   {len(val_df)} samples from {val_df[stock_col].nunique()} stocks")
+    print(f"  Test:  {len(test_df)} samples from {test_df[stock_col].nunique()} stocks")
+    
+    return train_df, val_df, test_df
+
+
 def prepare_ml_data(
     df: pd.DataFrame,
     feature_columns: List[str],
@@ -207,10 +321,15 @@ def preprocess_pipeline(
     scaler_type: str = None,
     train_ratio: float = None,
     val_ratio: float = None,
-    test_ratio: float = None
+    test_ratio: float = None,
+    stock_col: Optional[str] = None,
+    holdout_stocks: Optional[List[str]] = None
 ) -> dict:
     """
     Complete preprocessing pipeline: handle NaN, split, and scale.
+    
+    Supports both single-stock and multi-stock data. If stock_col is provided,
+    uses multi-stock splitting strategy.
     
     Args:
         df: DataFrame with features and target
@@ -221,6 +340,8 @@ def preprocess_pipeline(
         train_ratio: Training set proportion
         val_ratio: Validation set proportion
         test_ratio: Test set proportion
+        stock_col: Optional stock identifier column (for multi-stock data)
+        holdout_stocks: Optional list of stocks to reserve entirely for testing
         
     Returns:
         Dictionary containing:
@@ -234,13 +355,23 @@ def preprocess_pipeline(
     # Handle missing values
     df_clean = handle_missing_values(df, method=handle_nan_method)
     
-    # Split into train/val/test
-    train_df, val_df, test_df = time_series_split(
-        df_clean,
-        train_ratio=train_ratio,
-        val_ratio=val_ratio,
-        test_ratio=test_ratio
-    )
+    # Split into train/val/test (multi-stock or single-stock)
+    if stock_col and stock_col in df_clean.columns:
+        train_df, val_df, test_df = time_series_split_multi_stock(
+            df_clean,
+            stock_col=stock_col,
+            train_ratio=train_ratio,
+            val_ratio=val_ratio,
+            test_ratio=test_ratio,
+            holdout_stocks=holdout_stocks
+        )
+    else:
+        train_df, val_df, test_df = time_series_split(
+            df_clean,
+            train_ratio=train_ratio,
+            val_ratio=val_ratio,
+            test_ratio=test_ratio
+        )
     
     # Prepare training data (fit scaler)
     X_train, y_train, scaler = prepare_ml_data(
@@ -283,6 +414,13 @@ def preprocess_pipeline(
         'test_class_0': int((y_test == 0).sum()),
         'test_class_1': int((y_test == 1).sum()),
     }
+    
+    # Add stock information if available
+    if stock_col and stock_col in df_clean.columns:
+        stats['num_stocks'] = df_clean[stock_col].nunique()
+        stats['train_stocks'] = train_df[stock_col].nunique()
+        stats['val_stocks'] = val_df[stock_col].nunique()
+        stats['test_stocks'] = test_df[stock_col].nunique()
     
     return {
         'X_train': X_train,
