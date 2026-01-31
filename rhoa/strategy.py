@@ -14,9 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__version__ = "0.1.3"
+from pandas.api.extensions import register_dataframe_accessor
 
-from .preprocess import PreprocessAccessor
-from .indicators import indicators
-from .strategy import StrategyAccessor
-from . import data
+@register_dataframe_accessor("strategy")
+class StrategyAccessor:
+    """Accessor for DataFrame strategy methods."""
+    def __init__(self, pandas_obj):
+        self._df = pandas_obj

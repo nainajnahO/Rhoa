@@ -1,0 +1,53 @@
+Metadata-Version: 2.4
+Name: rhoa
+Version: 0.1.7
+Summary: A pandas DataFrame extension for technical analysis.
+Author-email: nainajnahO <d.ohanjanian@icloud.com>
+License-Expression: GPL-3.0-or-later
+Project-URL: Homepage, https://github.com/nainajnahO/Rhoa.git
+Project-URL: Documentation, https://nainajnaho.github.io/Rhoa/
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Financial and Insurance Industry
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Topic :: Office/Business :: Financial
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pandas>=1.3
+Requires-Dist: numpy>=1.21
+Provides-Extra: dev
+Requires-Dist: pytest>=6.0; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
+Requires-Dist: black; extra == "dev"
+Requires-Dist: flake8; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+Provides-Extra: docs
+Requires-Dist: sphinx>=4.0; extra == "docs"
+Requires-Dist: sphinx-rtd-theme; extra == "docs"
+Requires-Dist: sphinx-autodoc-typehints; extra == "docs"
+Dynamic: license-file
+
+<div align="center">
+  <img src="media/logo.png" alt="Rhoa Logo" width="960" style="margin-bottom: -30px;"/>
+
+  [![Development Status](https://img.shields.io/badge/status-pre--alpha-red)](https://github.com/nainajnahO/Rhoa)
+  [![PyPI version](https://img.shields.io/pypi/v/rhoa)](https://pypi.org/project/rhoa/)
+  [![Documentation](https://img.shields.io/badge/docs-available-brightgreen)](https://nainajnaho.github.io/Rhoa/)
+  [![License](https://img.shields.io/pypi/l/rhoa)](https://github.com/nainajnahO/Rhoa/blob/main/LICENSE)
+  [![Python versions](https://img.shields.io/pypi/pyversions/rhoa)](okhttps://pypi.org/project/rhoa/)
+
+  **Rhoa is a Python package providing functions and pandas DataFrame extension accessors for technical analysis.**
+</div>
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+## Installation
+
+```bash
+pip install rhoa
+```

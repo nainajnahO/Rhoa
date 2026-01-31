@@ -1,0 +1,16 @@
+{
+  "layers": [
+    128,
+    64,
+    32
+  ],
+  "dropout_rates": [
+    0.3,
+    0.2,
+    0.2
+  ],
+  "activation": "relu",
+  "output_activation": "sigmoid",
+  "learning_rate": 0.001,
+  "optimizer": "adam"
+}
