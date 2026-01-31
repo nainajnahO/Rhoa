@@ -279,7 +279,7 @@ def print_comparison_table(all_results: Dict[str, pd.DataFrame], thresholds: Lis
         for model_name, results in all_results.items():
             row = results[results['threshold'] == threshold].iloc[0]
             print(f"{model_name:<25} | {row['precision']:>9.1%} | {row['recall']:>9.1%} | "
-                  f"{row['total_signals']:>8d} | {row['tp']:>5d} | {row['fp']:>5d}")
+                  f"{int(row['total_signals']):>8d} | {int(row['tp']):>5d} | {int(row['fp']):>5d}")
     
     print("\n" + "="*100)
 

@@ -319,8 +319,7 @@ def main():
         model=model,
         scaler=scaler,
         feature_columns=feature_columns,
-        model_dir=str(output_dir),
-        model_name=model_name
+        base_path=str(output_dir)
     )
     print(f"✓ Model saved to: {output_dir}")
     

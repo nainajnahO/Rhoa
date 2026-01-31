@@ -1,0 +1,5 @@
+{
+  "num_features": 64,
+  "save_format": "h5",
+  "scaler_type": "StandardScaler"
+}
