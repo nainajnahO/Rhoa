@@ -19,4 +19,5 @@ __version__ = "0.1.3"
 from .preprocess import PreprocessAccessor
 from .indicators import indicators
 from .strategy import StrategyAccessor
+from .plots import PlotsAccessor
 from . import data

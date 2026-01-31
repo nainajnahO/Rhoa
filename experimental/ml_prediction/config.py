@@ -76,7 +76,7 @@ TRAINING_CONFIG = {
     'reduce_lr_patience': 5,
     'reduce_lr_factor': 0.5,
     'reduce_lr_min_lr': 1e-7,
-    'class_weight_method': 'balanced',
+    'class_weight_method': None,
     'verbose': 1,
 }
 
