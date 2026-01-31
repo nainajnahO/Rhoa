@@ -96,15 +96,44 @@ With more diverse training data (5-10+ stocks), we expect:
 
 ### Step 1: Prepare Stock Data
 
-You need to provide **5-10 additional stock CSV files** (more is better).
+You have **two options** for providing stock data:
 
-**Required format** (same as your current test data):
+#### Option A: Google Sheets (Recommended for Easy Updates)
+
+Store your stock data in Google Sheets and load directly via URL.
+
+**Setup**:
+1. Create a Google Sheet with OHLCV data
+2. Each stock can be in a separate tab (gid=0, gid=1, etc.)
+3. Make sure sheet is publicly accessible or shareable
+4. Use the export URL format: `https://docs.google.com/spreadsheets/d/SHEET_ID/export?format=csv&gid=TAB_NUMBER`
+
+**Required format**:
 ```csv
 Date,Open,High,Low,Close,Volume
 1/2/2015 17:30:00,71.43,71.68,71.05,71.33,611903
 1/5/2015 17:30:00,71.2,71.28,70.6,70.75,410586
 ...
 ```
+
+**Example**:
+```bash
+python aggregate_data.py --google_sheets \
+    "AAPL=https://docs.google.com/.../export?format=csv&gid=0" \
+    "MSFT=https://docs.google.com/.../export?format=csv&gid=1" \
+    "GOOGL=https://docs.google.com/.../export?format=csv&gid=2" \
+    --output_file data/combined_stocks.csv
+```
+
+**Or use the provided shell script**:
+```bash
+# Edit load_from_google_sheets.sh with your URLs, then run:
+./load_from_google_sheets.sh
+```
+
+#### Option B: Local CSV Files
+
+Save individual stock CSV files locally.
 
 **File structure**:
 ```
@@ -118,35 +147,60 @@ experimental/ml_prediction/
         └── ... (more stocks)
 ```
 
-**Tips**:
+**Example**:
+```bash
+python aggregate_data.py \
+    --input_dir data/stocks \
+    --output_file data/combined_stocks.csv
+```
+
+**Common Requirements**:
 - Each stock should have 250+ rows minimum
 - Longer history is better (ideally 2000+ rows like your current data)
 - Mix of different sectors is ideal
-- Files can have various column naming (Open/OPEN/open, etc.) - script handles this
+- Column naming is flexible (Open/OPEN/open, etc.) - script handles this
 
 ### Step 2: Aggregate Data
 
-Combine all stock files into a single training dataset:
+Combine all stock data into a single training dataset.
 
+**If using Google Sheets**:
+```bash
+cd experimental/ml_prediction
+
+python aggregate_data.py --google_sheets \
+    "AAPL=https://docs.google.com/spreadsheets/d/YOUR_ID/export?format=csv&gid=0" \
+    "MSFT=https://docs.google.com/spreadsheets/d/YOUR_ID/export?format=csv&gid=1" \
+    "GOOGL=https://docs.google.com/spreadsheets/d/YOUR_ID/export?format=csv&gid=2" \
+    --output_file data/combined_stocks.csv
+```
+
+**If using local files**:
 ```bash
 cd experimental/ml_prediction
 python aggregate_data.py --input_dir data/stocks --output_file data/combined_stocks.csv
 ```
 
+**Or use the convenience script** (edit URLs first):
+```bash
+./load_from_google_sheets.sh  # Runs all steps automatically
+```
+
 This will:
-- Load and validate all stock CSVs
+- Load and validate all stock data
 - Standardize formats
 - Add stock identifiers
 - Save combined dataset
 
 **Expected output**:
 ```
-Found 7 CSV files in data/stocks
+Loading 3 stocks from Google Sheets URLs
 Loading AAPL... ✓ 2617 rows (2015-01-02 to 2025-07-16)
 Loading MSFT... ✓ 2500 rows (2015-01-02 to 2025-06-30)
+Loading GOOGL... ✓ 2400 rows (2015-01-02 to 2025-06-15)
 ...
-Total stocks loaded: 7
-Total rows: 18,000
+Total stocks loaded: 3
+Total rows: 7,517
 ```
 
 ### Step 3: Train Multi-Stock Model

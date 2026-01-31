@@ -2,11 +2,21 @@
 
 This directory is for storing stock data used in training and evaluation.
 
+## Two Ways to Provide Data
+
+### Option 1: Google Sheets (Recommended)
+Load stock data directly from Google Sheets URLs - no need to save local files!
+
+See the `load_from_google_sheets.sh` script and `stocks_config_example.txt` for examples.
+
+### Option 2: Local CSV Files
+Save individual stock CSV files in the `stocks/` directory.
+
 ## Directory Structure
 
 ```
 data/
-├── stocks/              # Place individual stock CSV files here
+├── stocks/              # (Optional) Place individual stock CSV files here
 │   ├── AAPL.csv
 │   ├── MSFT.csv
 │   ├── GOOGL.csv
@@ -46,10 +56,36 @@ The aggregation script handles various naming conventions:
 
 ## Usage
 
-### 1. Add Stock Files
+### Option A: Using Google Sheets
 
-Place your stock CSV files in the `stocks/` directory:
+**Step 1**: Set up your Google Sheets
+- Create a sheet with OHLCV data
+- Each stock can be on a different tab (gid parameter)
+- Make sure it's publicly accessible or shareable
 
+**Step 2**: Get the export URL
+Format: `https://docs.google.com/spreadsheets/d/SHEET_ID/export?format=csv&gid=TAB_NUMBER`
+- `gid=0` is the first tab
+- `gid=1` is the second tab, etc.
+
+**Step 3**: Run aggregation with URLs
+```bash
+cd experimental/ml_prediction
+
+python aggregate_data.py --google_sheets \
+    "AAPL=https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=0" \
+    "MSFT=https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=1" \
+    --output_file data/combined_stocks.csv
+```
+
+**Or edit and run the convenience script**:
+```bash
+./load_from_google_sheets.sh  # Runs entire workflow automatically
+```
+
+### Option B: Using Local Files
+
+**Step 1**: Add stock files to `stocks/` directory
 ```bash
 # Example structure
 experimental/ml_prediction/data/stocks/
@@ -60,16 +96,15 @@ experimental/ml_prediction/data/stocks/
 └── TSLA.csv      # Tesla
 ```
 
-### 2. Aggregate Data
-
-Run the aggregation script to combine all stocks:
-
+**Step 2**: Run aggregation from directory
 ```bash
 cd experimental/ml_prediction
 python aggregate_data.py --input_dir data/stocks --output_file data/combined_stocks.csv
 ```
 
-This creates `data/combined_stocks.csv` with all stocks combined and a `stock_id` column added.
+### Result
+
+Both methods create `data/combined_stocks.csv` with all stocks combined and a `stock_id` column added.
 
 ### 3. Train Model
 

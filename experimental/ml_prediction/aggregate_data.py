@@ -2,14 +2,21 @@
 Data aggregation script to combine multiple stock CSV files into a single training dataset.
 
 This script:
-1. Loads multiple stock CSV files from a specified directory
+1. Loads multiple stock CSV files from a specified directory OR Google Sheets URLs
 2. Standardizes the format (Date, OHLCV columns)
 3. Adds stock identifier for tracking
 4. Combines into a single dataset for training
 5. Validates data quality and temporal ordering
 
 Usage:
+    # From local files
     python aggregate_data.py --input_dir data/stocks --output_file data/combined_stocks.csv
+    
+    # From Google Sheets
+    python aggregate_data.py --google_sheets \
+        "AAPL=https://docs.google.com/spreadsheets/.../export?format=csv&gid=0" \
+        "MSFT=https://docs.google.com/spreadsheets/.../export?format=csv&gid=1" \
+        --output_file data/combined_stocks.csv
 """
 
 import os
@@ -17,23 +24,23 @@ import sys
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
 import argparse
 
 
-def load_single_stock(filepath: str, stock_id: Optional[str] = None) -> pd.DataFrame:
+def load_single_stock(filepath_or_url: str, stock_id: Optional[str] = None) -> pd.DataFrame:
     """
-    Load a single stock CSV file and standardize the format.
+    Load a single stock CSV file or Google Sheets URL and standardize the format.
     
     Args:
-        filepath: Path to the CSV file
+        filepath_or_url: Path to CSV file or Google Sheets export URL
         stock_id: Stock identifier (if None, uses filename without extension)
         
     Returns:
         DataFrame with standardized columns and stock_id
     """
-    # Read CSV
-    df = pd.read_csv(filepath)
+    # Read CSV (works for both files and URLs)
+    df = pd.read_csv(filepath_or_url)
     
     # Standardize column names (handle various formats)
     column_mapping = {
@@ -60,7 +67,7 @@ def load_single_stock(filepath: str, stock_id: Optional[str] = None) -> pd.DataF
     required_cols = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
     missing_cols = [col for col in required_cols if col not in df.columns]
     if missing_cols:
-        raise ValueError(f"Missing required columns in {filepath}: {missing_cols}")
+        raise ValueError(f"Missing required columns in {filepath_or_url}: {missing_cols}")
     
     # Keep only required columns
     df = df[required_cols].copy()
@@ -76,7 +83,11 @@ def load_single_stock(filepath: str, stock_id: Optional[str] = None) -> pd.DataF
     
     # Add stock identifier
     if stock_id is None:
-        stock_id = Path(filepath).stem
+        # Try to extract from filepath if it's a local file
+        if not filepath_or_url.startswith('http'):
+            stock_id = Path(filepath_or_url).stem
+        else:
+            stock_id = 'unknown'
     df['stock_id'] = stock_id
     
     # Convert numeric columns
@@ -99,14 +110,14 @@ def load_single_stock(filepath: str, stock_id: Optional[str] = None) -> pd.DataF
     return df
 
 
-def aggregate_stocks(
+def aggregate_stocks_from_files(
     input_dir: str,
     output_file: Optional[str] = None,
     file_pattern: str = "*.csv",
     min_rows_per_stock: int = 250
 ) -> pd.DataFrame:
     """
-    Aggregate multiple stock CSV files into a single dataset.
+    Aggregate multiple stock CSV files from a directory into a single dataset.
     
     Args:
         input_dir: Directory containing stock CSV files
@@ -186,15 +197,107 @@ def aggregate_stocks(
     return combined_df
 
 
+def aggregate_stocks_from_urls(
+    stock_urls: Dict[str, str],
+    output_file: Optional[str] = None,
+    min_rows_per_stock: int = 250
+) -> pd.DataFrame:
+    """
+    Aggregate multiple stocks from Google Sheets URLs into a single dataset.
+    
+    Args:
+        stock_urls: Dictionary mapping stock_id to Google Sheets export URL
+        output_file: Optional path to save combined dataset
+        min_rows_per_stock: Minimum rows required per stock (default: 250)
+        
+    Returns:
+        Combined DataFrame with all stocks
+    """
+    print(f"Loading {len(stock_urls)} stocks from Google Sheets URLs")
+    print("-" * 80)
+    
+    # Load all stocks
+    all_stocks = []
+    skipped_stocks = []
+    
+    for stock_id, url in stock_urls.items():
+        try:
+            print(f"Loading {stock_id}...", end=" ")
+            df = load_single_stock(url, stock_id=stock_id)
+            
+            if len(df) < min_rows_per_stock:
+                print(f"SKIP (only {len(df)} rows, minimum {min_rows_per_stock})")
+                skipped_stocks.append(stock_id)
+                continue
+            
+            all_stocks.append(df)
+            date_range = f"{df['Date'].min().date()} to {df['Date'].max().date()}"
+            print(f"✓ {len(df)} rows ({date_range})")
+            
+        except Exception as e:
+            print(f"ERROR: {str(e)}")
+            skipped_stocks.append(stock_id)
+    
+    if not all_stocks:
+        raise ValueError("No valid stocks loaded. Check your URLs and data format.")
+    
+    # Combine all stocks
+    combined_df = pd.concat(all_stocks, ignore_index=True)
+    
+    # Sort by stock_id and Date to maintain temporal order within each stock
+    combined_df = combined_df.sort_values(['stock_id', 'Date']).reset_index(drop=True)
+    
+    print("-" * 80)
+    print(f"\n📊 Aggregation Summary:")
+    print(f"  Total stocks loaded: {len(all_stocks)}")
+    print(f"  Stocks skipped: {len(skipped_stocks)}")
+    if skipped_stocks:
+        print(f"    Skipped: {', '.join(skipped_stocks)}")
+    print(f"  Total rows: {len(combined_df):,}")
+    print(f"  Date range: {combined_df['Date'].min().date()} to {combined_df['Date'].max().date()}")
+    print(f"\n  Rows per stock:")
+    for stock_id in combined_df['stock_id'].unique():
+        count = len(combined_df[combined_df['stock_id'] == stock_id])
+        print(f"    {stock_id}: {count:,}")
+    
+    # Save if output file specified
+    if output_file:
+        output_path = Path(output_file)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        combined_df.to_csv(output_file, index=False)
+        print(f"\n✓ Saved combined dataset to: {output_file}")
+    
+    return combined_df
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Aggregate multiple stock CSV files into a single training dataset"
+        description="Aggregate multiple stock CSV files or Google Sheets into a single training dataset",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # From local files
+  python aggregate_data.py --input_dir data/stocks --output_file data/combined_stocks.csv
+  
+  # From Google Sheets
+  python aggregate_data.py --google_sheets \\
+      "AAPL=https://docs.google.com/.../export?format=csv&gid=0" \\
+      "MSFT=https://docs.google.com/.../export?format=csv&gid=1" \\
+      --output_file data/combined_stocks.csv
+        """
     )
     parser.add_argument(
         '--input_dir',
         type=str,
-        default='data/stocks',
+        default=None,
         help='Directory containing stock CSV files (default: data/stocks)'
+    )
+    parser.add_argument(
+        '--google_sheets',
+        type=str,
+        nargs='+',
+        default=None,
+        help='Google Sheets URLs in format "STOCK_ID=URL" (e.g., "AAPL=https://...&gid=0")'
     )
     parser.add_argument(
         '--output_file',
@@ -206,7 +309,7 @@ def main():
         '--file_pattern',
         type=str,
         default='*.csv',
-        help='Pattern to match CSV files (default: *.csv)'
+        help='Pattern to match CSV files when using --input_dir (default: *.csv)'
     )
     parser.add_argument(
         '--min_rows',
@@ -217,28 +320,62 @@ def main():
     
     args = parser.parse_args()
     
+    # Validate arguments
+    if not args.input_dir and not args.google_sheets:
+        parser.error("Either --input_dir or --google_sheets must be specified")
+    
+    if args.input_dir and args.google_sheets:
+        parser.error("Cannot use both --input_dir and --google_sheets. Choose one.")
+    
     # Make paths relative to script location
     script_dir = Path(__file__).parent
-    input_dir = script_dir / args.input_dir
     output_file = script_dir / args.output_file
     
     print("="*80)
     print("STOCK DATA AGGREGATION")
     print("="*80)
-    print(f"Input directory: {input_dir}")
-    print(f"Output file: {output_file}")
-    print(f"File pattern: {args.file_pattern}")
-    print(f"Minimum rows per stock: {args.min_rows}")
-    print("="*80)
-    print()
     
     try:
-        combined_df = aggregate_stocks(
-            input_dir=str(input_dir),
-            output_file=str(output_file),
-            file_pattern=args.file_pattern,
-            min_rows_per_stock=args.min_rows
-        )
+        if args.google_sheets:
+            # Parse Google Sheets URLs
+            stock_urls = {}
+            for item in args.google_sheets:
+                if '=' not in item:
+                    raise ValueError(f"Invalid format: {item}. Expected 'STOCK_ID=URL'")
+                stock_id, url = item.split('=', 1)
+                stock_urls[stock_id] = url
+            
+            print(f"Source: Google Sheets")
+            print(f"Stocks: {', '.join(stock_urls.keys())}")
+            print(f"Output file: {output_file}")
+            print(f"Minimum rows per stock: {args.min_rows}")
+            print("="*80)
+            print()
+            
+            combined_df = aggregate_stocks_from_urls(
+                stock_urls=stock_urls,
+                output_file=str(output_file),
+                min_rows_per_stock=args.min_rows
+            )
+        
+        else:
+            # Use local files
+            input_dir = script_dir / (args.input_dir or 'data/stocks')
+            
+            print(f"Source: Local files")
+            print(f"Input directory: {input_dir}")
+            print(f"Output file: {output_file}")
+            print(f"File pattern: {args.file_pattern}")
+            print(f"Minimum rows per stock: {args.min_rows}")
+            print("="*80)
+            print()
+            
+            combined_df = aggregate_stocks_from_files(
+                input_dir=str(input_dir),
+                output_file=str(output_file),
+                file_pattern=args.file_pattern,
+                min_rows_per_stock=args.min_rows
+            )
         
         print("\n" + "="*80)
         print("✓ AGGREGATION COMPLETE!")
