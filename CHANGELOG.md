@@ -7,27 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+- Strategy framework implementation
+- Preprocessing utilities
+- Additional visualization options
+- Performance optimizations
+
+## [0.1.8] - 2026-02-08
+
 ### Added
 - Comprehensive documentation structure
-- User guide section
+- User guide section with detailed guides for indicators, targets, and visualization
 - FAQ and troubleshooting guides
 - Test suite for targets module
+- Automated PyPI release workflow via GitHub Actions
+- RELEASE.md with complete release process documentation
 
 ### Changed
 - Reorganized examples into separate pages
 - Enhanced API reference documentation
 - Improved docstring standards across all modules
 - Removed experimental prediction models directory
+- Updated CHANGELOG with real PyPI release dates
 
 ### Fixed
 - Version synchronization between conf.py and pyproject.toml
 - Documentation build issues
-
-### Planned
-- Strategy framework implementation
-- Preprocessing utilities
-- Additional visualization options
-- Performance optimizations
 
 ## [0.1.7] - 2025-08-11
 
