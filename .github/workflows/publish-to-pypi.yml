@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*.*.*'  # Triggers on version tags like v0.1.8, v1.0.0, etc.
 
+permissions:
+  contents: write  # Required to create GitHub releases
+
 jobs:
   build-and-publish:
     name: Build and publish to PyPI
