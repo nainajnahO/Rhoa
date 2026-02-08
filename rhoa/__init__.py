@@ -21,3 +21,4 @@ from .indicators import indicators
 from .strategy import StrategyAccessor
 from .plots import PlotsAccessor
 from . import data
+from . import targets

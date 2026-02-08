@@ -119,3 +119,89 @@ For indicators that require OHLC data:
    adx = adx_data['ADX']
    plus_di = adx_data['+DI']
    minus_di = adx_data['-DI']
+
+Target Generation for Machine Learning
+---------------------------------------
+
+Generate optimized binary targets for ML models:
+
+Auto Mode (Pareto Optimization)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Automatically finds optimal period and threshold:
+
+.. code-block:: python
+
+   from rhoa.targets import generate_target_combinations
+
+   # Load OHLC data
+   df = pd.read_csv('prices.csv')
+
+   # Generate targets with Pareto optimization
+   targets, meta = generate_target_combinations(
+       df,
+       mode='auto',
+       target_class_balance=0.5  # 50% positive instances
+   )
+
+   # Check optimal parameters found
+   print(meta['method_7'])  # MaxHigh/Close[0]
+   # {'period': 6, 'threshold': 4.0, 'instances': 249, 'pct_of_max': 8.9}
+
+   # Use in ML pipeline
+   print(targets.head())
+   #    Target_1  Target_2  ...  Target_8
+   # 0     False     False  ...     False
+   # 1      True     False  ...      True
+
+Manual Mode (Elbow Method)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Fixed period with elbow-optimized thresholds:
+
+.. code-block:: python
+
+   # Generate targets with fixed 5-day lookback
+   targets, meta = generate_target_combinations(
+       df,
+       mode='manual',
+       lookback_periods=5
+   )
+
+   # All methods use period=5, with elbow-detected thresholds
+   print(meta['method_1'])
+   # {'period': 5, 'threshold': 6.0, 'instances': 22, 'pct_of_max': 1.4}
+
+ML Pipeline Integration
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Complete example with features and model training:
+
+.. code-block:: python
+
+   from rhoa.targets import generate_target_combinations
+   from sklearn.ensemble import RandomForestClassifier
+   from sklearn.model_selection import train_test_split
+
+   # Generate features
+   df['SMA_20'] = df['Close'].rolling(20).mean()
+   df['Returns'] = df['Close'].pct_change()
+
+   # Generate optimized targets
+   targets, meta = generate_target_combinations(
+       df,
+       mode='auto',
+       target_class_balance=0.3  # 30% positive instances
+   )
+
+   # Combine features and targets
+   ml_df = pd.concat([df, targets], axis=1).dropna()
+
+   # Train model on Method 7 (MaxHigh/Close[0])
+   X = ml_df[['SMA_20', 'Returns']]
+   y = ml_df['Target_7']
+
+   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+   model = RandomForestClassifier().fit(X_train, y_train)
+
+   print(f"Accuracy: {model.score(X_test, y_test):.2%}")

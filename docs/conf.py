@@ -6,10 +6,27 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import sys
+import os
+from pathlib import Path
+
+# Add parent directory to path to import package
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Read version from pyproject.toml
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
+
+with open(Path(__file__).parent.parent / 'pyproject.toml', 'rb') as f:
+    pyproject = tomllib.load(f)
+    release = pyproject['project']['version']
+
 project = 'Rhoa'
 copyright = '2025, nainajnahO'
 author = 'nainajnahO'
-release = '0.1.3'
+version = '.'.join(release.split('.')[:2])  # Short X.Y version
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
