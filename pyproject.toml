@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rhoa"
-version = "0.1.8"
+version = "0.1.9"
 description = "A pandas DataFrame extension for technical analysis."
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -44,6 +44,9 @@ docs = [
 Homepage = "https://github.com/nainajnahO/Rhoa.git"
 Documentation = "https://nainajnaho.github.io/Rhoa/"
 
+
+[tool.setuptools.package-data]
+rhoa = ["py.typed"]
 
 [tool.setuptools.packages.find]
 include = ["rhoa*"]

@@ -14,9 +14,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pandas as pd
 
-def import_sheet(sheet_url: str) -> pd.DataFrame:
+if TYPE_CHECKING:
+    from rhoa import DataFrame
+
+def import_sheet(sheet_url: str) -> DataFrame:
     """
     Imports a Google Sheet into a pandas DataFrame.
 
@@ -27,7 +34,7 @@ def import_sheet(sheet_url: str) -> pd.DataFrame:
     :param sheet_url: The URL of the Google Sheet to import.
     :type sheet_url: str
     :return: The data contained in the sheet represented as a pandas DataFrame.
-    :rtype: pd.DataFrame
+    :rtype: rhoa.DataFrame
     """
     base_url = sheet_url.split("/edit")[0]
     return pd.read_csv(f"{base_url}/export?format=csv&gid=0")
