@@ -154,9 +154,9 @@ Common Patterns
 
       # Calculate multiple indicators
       close = df['Close']
-      df['SMA_50'] = close.indicators.sma(50)
-      df['RSI'] = close.indicators.rsi(14)
-      macd = close.indicators.macd()
+      df['SMA_50'] = close.rhoa.indicators.sma(50)
+      df['RSI'] = close.rhoa.indicators.rsi(14)
+      macd = close.rhoa.indicators.macd()
       df['MACD'] = macd['macd']
 
 **Feature Engineering**
@@ -164,9 +164,9 @@ Common Patterns
    .. code-block:: python
 
       # Create features for ML
-      df['SMA_20'] = df['Close'].indicators.sma(20)
+      df['SMA_20'] = df['Close'].rhoa.indicators.sma(20)
       df['Returns'] = df['Close'].pct_change()
-      df['Volatility'] = df['Close'].indicators.ewmstd(span=20)
+      df['Volatility'] = df['Close'].rhoa.indicators.ewmstd(span=20)
 
 **Target Generation**
 
@@ -183,7 +183,7 @@ Common Patterns
    .. code-block:: python
 
       # Visualize predictions
-      fig = df.plots.signal(
+      fig = df.rhoa.plots.signal(
           y_pred=predictions,
           y_true=ground_truth,
           date_col='Date',

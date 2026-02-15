@@ -33,7 +33,7 @@ Basic Signal Plot
    ground_truth = y_test
 
    # Create visualization
-   fig = df.plots.signal(
+   fig = df.rhoa.plots.signal(
        y_pred=predictions,
        y_true=ground_truth,
        date_col='Date',
@@ -53,7 +53,7 @@ Complete API
 
 .. code-block:: python
 
-   df.plots.signal(
+   df.rhoa.plots.signal(
        y_pred,                    # Required: predictions
        y_true=None,              # Optional: ground truth
        date_col='Date',          # Date column name
@@ -93,10 +93,10 @@ Parameters Explained
    .. code-block:: python
 
       # With ground truth (full visualization)
-      fig = df.plots.signal(y_pred=predictions, y_true=targets)
+      fig = df.rhoa.plots.signal(y_pred=predictions, y_true=targets)
 
       # Without ground truth (predictions only)
-      fig = df.plots.signal(y_pred=predictions)
+      fig = df.rhoa.plots.signal(y_pred=predictions)
 
 **date_col** (default='Date')
    Name of the date/timestamp column.
@@ -104,7 +104,7 @@ Parameters Explained
    .. code-block:: python
 
       # If your date column is named differently
-      fig = df.plots.signal(
+      fig = df.rhoa.plots.signal(
           y_pred=predictions,
           y_true=targets,
           date_col='Timestamp'  # Custom column name
@@ -116,7 +116,7 @@ Parameters Explained
    .. code-block:: python
 
       # Plot with High prices instead of Close
-      fig = df.plots.signal(
+      fig = df.rhoa.plots.signal(
           y_pred=predictions,
           y_true=targets,
           price_col='High'
@@ -130,7 +130,7 @@ Parameters Explained
       threshold = 0.67
       y_pred = (model.predict_proba(X)[:, 1] > threshold).astype(int)
 
-      fig = df.plots.signal(
+      fig = df.rhoa.plots.signal(
           y_pred=y_pred,
           y_true=y_true,
           threshold=threshold  # Shows "Threshold: 0.67" in title
@@ -141,7 +141,7 @@ Parameters Explained
 
    .. code-block:: python
 
-      fig = df.plots.signal(
+      fig = df.rhoa.plots.signal(
           y_pred=predictions,
           y_true=targets,
           title='AAPL Random Forest Model'
@@ -153,14 +153,14 @@ Parameters Explained
    .. code-block:: python
 
       # Larger figure for presentations
-      fig = df.plots.signal(
+      fig = df.rhoa.plots.signal(
           y_pred=predictions,
           y_true=targets,
           figsize=(24, 14)
       )
 
       # Smaller figure for reports
-      fig = df.plots.signal(
+      fig = df.rhoa.plots.signal(
           y_pred=predictions,
           y_true=targets,
           figsize=(12, 8)
@@ -172,7 +172,7 @@ Parameters Explained
    .. code-block:: python
 
       # Green theme for positive emphasis
-      fig = df.plots.signal(
+      fig = df.rhoa.plots.signal(
           y_pred=predictions,
           y_true=targets,
           cmap='Greens'
@@ -183,7 +183,7 @@ Parameters Explained
 
    .. code-block:: python
 
-      fig = df.plots.signal(
+      fig = df.rhoa.plots.signal(
           y_pred=predictions,
           y_true=targets,
           save_path='results/aapl_predictions.png'
@@ -195,7 +195,7 @@ Parameters Explained
    .. code-block:: python
 
       # High resolution for printing
-      fig = df.plots.signal(
+      fig = df.rhoa.plots.signal(
           y_pred=predictions,
           y_true=targets,
           save_path='report.png',
@@ -208,7 +208,7 @@ Parameters Explained
    .. code-block:: python
 
       # Save without displaying
-      fig = df.plots.signal(
+      fig = df.rhoa.plots.signal(
           y_pred=predictions,
           y_true=targets,
           save_path='output.png',
@@ -510,7 +510,7 @@ Complete Workflow
    # 2. Create features
    df['SMA_20'] = df['Close'].rolling(20).mean()
    df['SMA_50'] = df['Close'].rolling(50).mean()
-   df['RSI'] = df['Close'].indicators.rsi(14)
+   df['RSI'] = df['Close'].rhoa.indicators.rsi(14)
    df['Returns'] = df['Close'].pct_change()
 
    # 3. Create target
@@ -538,7 +538,7 @@ Complete Workflow
    y_pred = model.predict(X_test)
 
    # 8. Visualize
-   fig = df_test.plots.signal(
+   fig = df_test.rhoa.plots.signal(
        y_pred=y_pred,
        y_true=y_test,
        date_col='Date',
@@ -567,7 +567,7 @@ Comparing Models
        model.fit(X_train, y_train)
        y_pred = model.predict(X_test)
 
-       fig = df_test.plots.signal(
+       fig = df_test.rhoa.plots.signal(
            y_pred=y_pred,
            y_true=y_test,
            title=f'{name} - AAPL Predictions',
@@ -591,7 +591,7 @@ Threshold Optimization
    for threshold in thresholds:
        y_pred = (y_pred_proba > threshold).astype(int)
 
-       fig = df_test.plots.signal(
+       fig = df_test.rhoa.plots.signal(
            y_pred=y_pred,
            y_true=y_test,
            threshold=threshold,
@@ -614,7 +614,7 @@ Predictions Only (No Ground Truth)
    # Create same features
    future_data['SMA_20'] = future_data['Close'].rolling(20).mean()
    future_data['SMA_50'] = future_data['Close'].rolling(50).mean()
-   future_data['RSI'] = future_data['Close'].indicators.rsi(14)
+   future_data['RSI'] = future_data['Close'].rhoa.indicators.rsi(14)
    future_data['Returns'] = future_data['Close'].pct_change()
 
    future_clean = future_data.dropna()
@@ -624,7 +624,7 @@ Predictions Only (No Ground Truth)
    y_pred_future = model.predict(X_future)
 
    # Visualize (no ground truth, no confusion matrix)
-   fig = future_clean.plots.signal(
+   fig = future_clean.rhoa.plots.signal(
        y_pred=y_pred_future,
        # No y_true parameter
        date_col='Date',
@@ -642,16 +642,16 @@ Color Schemes
 .. code-block:: python
 
    # Professional blue theme (default)
-   fig = df.plots.signal(y_pred=pred, y_true=true, cmap='Blues')
+   fig = df.rhoa.plots.signal(y_pred=pred, y_true=true, cmap='Blues')
 
    # Success/green theme
-   fig = df.plots.signal(y_pred=pred, y_true=true, cmap='Greens')
+   fig = df.rhoa.plots.signal(y_pred=pred, y_true=true, cmap='Greens')
 
    # Warning/red theme
-   fig = df.plots.signal(y_pred=pred, y_true=true, cmap='Reds')
+   fig = df.rhoa.plots.signal(y_pred=pred, y_true=true, cmap='Reds')
 
    # Purple theme
-   fig = df.plots.signal(y_pred=pred, y_true=true, cmap='Purples')
+   fig = df.rhoa.plots.signal(y_pred=pred, y_true=true, cmap='Purples')
 
 Figure Sizes for Different Uses
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -659,7 +659,7 @@ Figure Sizes for Different Uses
 .. code-block:: python
 
    # For presentations (large, high DPI)
-   fig = df.plots.signal(
+   fig = df.rhoa.plots.signal(
        y_pred=pred, y_true=true,
        figsize=(24, 14),
        dpi=150,
@@ -667,7 +667,7 @@ Figure Sizes for Different Uses
    )
 
    # For papers/publications (standard, very high DPI)
-   fig = df.plots.signal(
+   fig = df.rhoa.plots.signal(
        y_pred=pred, y_true=true,
        figsize=(12, 8),
        dpi=600,
@@ -675,7 +675,7 @@ Figure Sizes for Different Uses
    )
 
    # For reports (medium)
-   fig = df.plots.signal(
+   fig = df.rhoa.plots.signal(
        y_pred=pred, y_true=true,
        figsize=(15, 9),
        dpi=300,
@@ -683,7 +683,7 @@ Figure Sizes for Different Uses
    )
 
    # For web/dashboard (smaller, lower DPI)
-   fig = df.plots.signal(
+   fig = df.rhoa.plots.signal(
        y_pred=pred, y_true=true,
        figsize=(10, 6),
        dpi=100,
@@ -700,7 +700,7 @@ The method returns a matplotlib Figure object, allowing further customization:
    import matplotlib.pyplot as plt
 
    # Get figure
-   fig = df.plots.signal(y_pred=pred, y_true=true, show=False)
+   fig = df.rhoa.plots.signal(y_pred=pred, y_true=true, show=False)
 
    # Access axes
    axes = fig.get_axes()
@@ -741,7 +741,7 @@ Do's
 
    .. code-block:: python
 
-      fig = df.plots.signal(
+      fig = df.rhoa.plots.signal(
           y_pred=pred, y_true=true,
           save_path=f'results/{model_name}_{datetime.date.today()}.png'
       )
@@ -752,7 +752,7 @@ Do's
 
       for t in [0.5, 0.6, 0.7]:
           y_pred = (proba > t).astype(int)
-          df.plots.signal(
+          df.rhoa.plots.signal(
               y_pred=y_pred, y_true=y_true,
               save_path=f'threshold_{t:.1f}.png',
               show=False
@@ -763,7 +763,7 @@ Do's
    .. code-block:: python
 
       title = f'{ticker} - {model_type} - {date_range} - Threshold {threshold}'
-      fig = df.plots.signal(y_pred=pred, y_true=true, title=title)
+      fig = df.rhoa.plots.signal(y_pred=pred, y_true=true, title=title)
 
 Don'ts
 ~~~~~~
@@ -775,12 +775,12 @@ Don'ts
       # WRONG - visualizing training data
       model.fit(X_train, y_train)
       y_train_pred = model.predict(X_train)
-      df_train.plots.signal(y_pred=y_train_pred, y_true=y_train)
+      df_train.rhoa.plots.signal(y_pred=y_train_pred, y_true=y_train)
       # This will look artificially good!
 
       # CORRECT - visualize test data
       y_test_pred = model.predict(X_test)
-      df_test.plots.signal(y_pred=y_test_pred, y_true=y_test)
+      df_test.rhoa.plots.signal(y_pred=y_test_pred, y_true=y_test)
 
 2. **Don't Compare Models on Different Date Ranges**
 
@@ -839,7 +839,7 @@ Common Issues
 
    # If using script
    import matplotlib.pyplot as plt
-   fig = df.plots.signal(y_pred=pred, y_true=true)
+   fig = df.rhoa.plots.signal(y_pred=pred, y_true=true)
    plt.show()  # Explicitly show
 
 **Issue**: Date axis is crowded/unreadable
@@ -848,7 +848,7 @@ Common Issues
 
    # Solution: Rotate labels automatically applied
    # But you can customize further
-   fig = df.plots.signal(y_pred=pred, y_true=true, show=False)
+   fig = df.rhoa.plots.signal(y_pred=pred, y_true=true, show=False)
    ax = fig.get_axes()[1]  # Price chart
    ax.tick_params(axis='x', rotation=45, labelsize=10)
    plt.tight_layout()
@@ -869,7 +869,7 @@ For Large Datasets
        y_pred_sample = y_pred[sample_idx]
        y_true_sample = y_true[sample_idx]
 
-       fig = df_sample.plots.signal(
+       fig = df_sample.rhoa.plots.signal(
            y_pred=y_pred_sample,
            y_true=y_true_sample
        )
@@ -886,7 +886,7 @@ Batch Processing
        df = load_data(ticker)
        # ... train model, get predictions ...
 
-       fig = df_test.plots.signal(
+       fig = df_test.rhoa.plots.signal(
            y_pred=y_pred,
            y_true=y_true,
            title=f'{ticker} Predictions',

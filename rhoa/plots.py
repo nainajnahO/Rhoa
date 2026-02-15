@@ -14,10 +14,10 @@ Basic usage with the DataFrame accessor:
 
 >>> import pandas as pd
 >>> import rhoa
->>> df = pd.read_csv('stock_data.csv')
+>>> df = rhoa.read_csv('stock_data.csv')
 >>> df['Date'] = pd.to_datetime(df['Date'])
 >>> # Visualize predictions
->>> fig = df.plots.signal(y_pred=predictions, y_true=targets)
+>>> fig = df.rhoa.plots.signal(y_pred=predictions, y_true=targets)
 
 Notes
 -----
@@ -49,11 +49,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from pandas.api.extensions import register_dataframe_accessor
 from typing import Optional, Union, Tuple
 
 
-@register_dataframe_accessor("plots")
 class PlotsAccessor:
     """
     Pandas DataFrame accessor for stock prediction visualization.
@@ -80,9 +78,9 @@ class PlotsAccessor:
 
     >>> import pandas as pd
     >>> import rhoa
-    >>> df = pd.read_csv('stock_data.csv')
+    >>> df = rhoa.read_csv('stock_data.csv')
     >>> # The .plots accessor is now available
-    >>> fig = df.plots.signal(y_pred=predictions)
+    >>> fig = df.rhoa.plots.signal(y_pred=predictions)
 
     Notes
     -----
@@ -284,7 +282,7 @@ class PlotsAccessor:
         >>> predictions = model.predict(features)
         >>>
         >>> # Create comprehensive visualization
-        >>> fig = df.plots.signal(
+        >>> fig = df.rhoa.plots.signal(
         ...     y_pred=predictions,
         ...     y_true=targets,
         ...     threshold=0.67,
@@ -296,7 +294,7 @@ class PlotsAccessor:
         Visualize predictions only (no ground truth available):
 
         >>> # When you don't have labels (e.g., predicting future)
-        >>> fig = df.plots.signal(
+        >>> fig = df.rhoa.plots.signal(
         ...     y_pred=predictions,
         ...     date_col='Date',
         ...     price_col='Close',
@@ -307,7 +305,7 @@ class PlotsAccessor:
         Customize for different price columns:
 
         >>> # Use opening prices instead of closing
-        >>> fig = df.plots.signal(
+        >>> fig = df.rhoa.plots.signal(
         ...     y_pred=predictions,
         ...     y_true=targets,
         ...     price_col='Open',
@@ -320,7 +318,7 @@ class PlotsAccessor:
         >>> for ticker in ['AAPL', 'GOOGL', 'MSFT']:
         ...     df = load_stock_data(ticker)
         ...     predictions = model.predict(df)
-        ...     fig = df.plots.signal(
+        ...     fig = df.rhoa.plots.signal(
         ...         y_pred=predictions,
         ...         save_path=f'reports/{ticker}_signals.png',
         ...         show=False  # Don't display, just save
@@ -334,7 +332,7 @@ class PlotsAccessor:
         >>>
         >>> for thresh in [0.5, 0.67, 0.8]:
         ...     preds = (proba >= thresh).astype(int)
-        ...     fig = df.plots.signal(
+        ...     fig = df.rhoa.plots.signal(
         ...         y_pred=preds,
         ...         y_true=targets,
         ...         threshold=thresh,
@@ -443,7 +441,7 @@ class PlotsAccessor:
         This method is called internally:
 
         >>> # These validations happen automatically in signal()
-        >>> fig = df.plots.signal(y_pred=predictions)
+        >>> fig = df.rhoa.plots.signal(y_pred=predictions)
         >>> # Raises ValueError if predictions length doesn't match df
 
         """
@@ -563,7 +561,7 @@ class PlotsAccessor:
         This method is called internally by signal():
 
         >>> # When y_true is provided, signal() creates confusion matrix
-        >>> fig = df.plots.signal(y_pred=predictions, y_true=targets)
+        >>> fig = df.rhoa.plots.signal(y_pred=predictions, y_true=targets)
         >>> # The confusion matrix is automatically plotted in the top panel
 
         """
@@ -777,7 +775,7 @@ Wrong: {fp}
         This method is called internally by signal():
 
         >>> # The price chart is automatically created
-        >>> fig = df.plots.signal(y_pred=predictions, y_true=targets)
+        >>> fig = df.rhoa.plots.signal(y_pred=predictions, y_true=targets)
         >>> # Bottom panel shows price with all signal markers
 
         """

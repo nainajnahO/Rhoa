@@ -79,7 +79,7 @@ Why doesn't the .indicators accessor work?
    import pandas as pd
 
    prices = pd.Series([100, 102, 104])
-   sma = prices.indicators.sma(20)  # Now works
+   sma = prices.rhoa.indicators.sma(20)  # Now works
 
 **Why**: Rhoa uses pandas' accessor API, which requires importing to register.
 
@@ -145,7 +145,7 @@ Why do my indicators return NaN values?
 .. code-block:: python
 
    prices = pd.Series([100, 102, 104, 106, 108])
-   sma_20 = prices.indicators.sma(window_size=20)
+   sma_20 = prices.rhoa.indicators.sma(window_size=20)
    # All values will be NaN because we only have 5 data points
 
 **Solution**: Ensure you have enough data:
@@ -154,7 +154,7 @@ Why do my indicators return NaN values?
 
    # For 20-period indicator, need at least 20 data points
    prices = pd.Series(range(100))  # 100 data points
-   sma_20 = prices.indicators.sma(window_size=20)
+   sma_20 = prices.rhoa.indicators.sma(window_size=20)
    # First 19 will be NaN, then valid values start
 
 **Handling NaN**:
@@ -183,9 +183,9 @@ How do I choose indicator parameters?
 .. code-block:: python
 
    # These are industry standards
-   rsi = prices.indicators.rsi(window_size=14)        # Standard
-   macd = prices.indicators.macd(12, 26, 9)           # Standard
-   bb = prices.indicators.bollinger_bands(20, 2.0)    # Standard
+   rsi = prices.rhoa.indicators.rsi(window_size=14)        # Standard
+   macd = prices.rhoa.indicators.macd(12, 26, 9)           # Standard
+   bb = prices.rhoa.indicators.bollinger_bands(20, 2.0)    # Standard
 
 **Then optimize if needed**:
 
@@ -193,7 +193,7 @@ How do I choose indicator parameters?
 
    # Test different values
    for window in [10, 14, 20]:
-       rsi = prices.indicators.rsi(window_size=window)
+       rsi = prices.rhoa.indicators.rsi(window_size=window)
        # Evaluate performance
        score = evaluate_strategy(rsi)
        print(f"Window {window}: {score}")
@@ -238,8 +238,8 @@ Can I use indicators with intraday data?
    df_5min = pd.read_csv('intraday_5min.csv')
 
    # Calculate indicators (adjust window sizes for timeframe)
-   df_5min['SMA_20'] = df_5min['Close'].indicators.sma(20)  # 100 minutes
-   df_5min['RSI'] = df_5min['Close'].indicators.rsi(14)     # 70 minutes
+   df_5min['SMA_20'] = df_5min['Close'].rhoa.indicators.sma(20)  # 100 minutes
+   df_5min['RSI'] = df_5min['Close'].rhoa.indicators.rsi(14)     # 70 minutes
 
 **Parameter adjustment**:
 
@@ -258,15 +258,15 @@ How do I combine multiple indicators?
    low = df['Low']
 
    # Trend
-   sma_50 = close.indicators.sma(50)
-   sma_200 = close.indicators.sma(200)
+   sma_50 = close.rhoa.indicators.sma(50)
+   sma_200 = close.rhoa.indicators.sma(200)
 
    # Momentum
-   rsi = close.indicators.rsi(14)
-   macd_data = close.indicators.macd()
+   rsi = close.rhoa.indicators.rsi(14)
+   macd_data = close.rhoa.indicators.macd()
 
    # Volatility
-   atr = close.indicators.atr(high, low, 14)
+   atr = close.rhoa.indicators.atr(high, low, 14)
 
    # Store in DataFrame
    df['SMA_50'] = sma_50
@@ -464,7 +464,7 @@ Visualization
 How do I visualize my predictions?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Use the ``.plots.signal()`` method:
+Use the ``.rhoa.plots.signal()`` method:
 
 .. code-block:: python
 
@@ -475,7 +475,7 @@ Use the ``.plots.signal()`` method:
    y_true = test_df['Target']
 
    # Visualize
-   fig = test_df.plots.signal(
+   fig = test_df.rhoa.plots.signal(
        y_pred=y_pred,
        y_true=y_true,
        date_col='Date',
@@ -513,7 +513,7 @@ Use the ``save_path`` parameter:
 
 .. code-block:: python
 
-   fig = df.plots.signal(
+   fig = df.rhoa.plots.signal(
        y_pred=predictions,
        y_true=targets,
        save_path='results/my_model.png',
@@ -524,7 +524,7 @@ Use the ``save_path`` parameter:
 
 .. code-block:: python
 
-   fig = df.plots.signal(
+   fig = df.rhoa.plots.signal(
        y_pred=predictions,
        y_true=targets,
        save_path='results/my_model.png',
@@ -539,7 +539,7 @@ Just omit ``y_true``:
 .. code-block:: python
 
    # For future predictions (no ground truth yet)
-   fig = df.plots.signal(
+   fig = df.rhoa.plots.signal(
        y_pred=predictions,
        # No y_true parameter
        date_col='Date',
@@ -567,8 +567,8 @@ Can I use scikit-learn with Rhoa?
    from sklearn.model_selection import train_test_split
 
    # Create features using Rhoa
-   df['SMA_20'] = df['Close'].indicators.sma(20)
-   df['RSI'] = df['Close'].indicators.rsi(14)
+   df['SMA_20'] = df['Close'].rhoa.indicators.sma(20)
+   df['RSI'] = df['Close'].rhoa.indicators.rsi(14)
 
    # Create targets using Rhoa
    from rhoa.targets import generate_target_combinations
@@ -714,13 +714,13 @@ Rhoa uses pandas and numpy, which are optimized for large datasets. However:
 .. code-block:: python
 
    # Indicators are fast - they use vectorized pandas operations
-   %timeit prices.indicators.sma(20)
+   %timeit prices.rhoa.indicators.sma(20)
    # ~1ms for 100k rows
 
    # Pre-calculate and store if using repeatedly
-   df['SMA_20'] = df['Close'].indicators.sma(20)  # Calculate once
+   df['SMA_20'] = df['Close'].rhoa.indicators.sma(20)  # Calculate once
    # Rather than
-   # sma = df['Close'].indicators.sma(20)  # Every time
+   # sma = df['Close'].rhoa.indicators.sma(20)  # Every time
 
 **For target generation**:
 
@@ -756,9 +756,9 @@ How do I optimize indicator calculations?
 .. code-block:: python
 
    # Calculate all indicators at once
-   df['SMA_20'] = df['Close'].indicators.sma(20)
-   df['SMA_50'] = df['Close'].indicators.sma(50)
-   df['RSI'] = df['Close'].indicators.rsi(14)
+   df['SMA_20'] = df['Close'].rhoa.indicators.sma(20)
+   df['SMA_50'] = df['Close'].rhoa.indicators.sma(50)
+   df['RSI'] = df['Close'].rhoa.indicators.rsi(14)
 
    # Store in DataFrame
    df.to_pickle('data_with_indicators.pkl')
@@ -771,10 +771,10 @@ How do I optimize indicator calculations?
 .. code-block:: python
 
    # Smaller windows = faster
-   sma_5 = prices.indicators.sma(5)    # Fast
+   sma_5 = prices.rhoa.indicators.sma(5)    # Fast
 
    # Larger windows = slower
-   sma_200 = prices.indicators.sma(200)  # Slower
+   sma_200 = prices.rhoa.indicators.sma(200)  # Slower
 
 **Avoid recalculation**:
 
@@ -782,11 +782,11 @@ How do I optimize indicator calculations?
 
    # SLOW - recalculates every time
    for i in range(100):
-       sma = df['Close'].indicators.sma(20)
+       sma = df['Close'].rhoa.indicators.sma(20)
        # Use sma
 
    # FAST - calculate once
-   sma = df['Close'].indicators.sma(20)
+   sma = df['Close'].rhoa.indicators.sma(20)
    for i in range(100):
        # Use sma
 
@@ -902,7 +902,7 @@ Error Messages
 
    # Error
    prices = pd.Series([100, 102])  # Only 2 values
-   sma_20 = prices.indicators.sma(20)  # Need 20 values!
+   sma_20 = prices.rhoa.indicators.sma(20)  # Need 20 values!
 
 **Solution**: Ensure sufficient data.
 
@@ -956,7 +956,7 @@ Error Messages
    df.columns = ['Date', 'Open', 'High', 'Low', 'Close']
 
    # Option 2: Use lowercase
-   sma = df['close'].indicators.sma(20)
+   sma = df['close'].rhoa.indicators.sma(20)
 
    # Option 3: Specify in function call
    targets, meta = generate_target_combinations(
@@ -992,7 +992,7 @@ How do I report a bug?
       df = pd.DataFrame({
           'Close': [100, 102, 104, 106, 108]
       })
-      result = df['Close'].indicators.sma(20)  # Bug occurs here
+      result = df['Close'].rhoa.indicators.sma(20)  # Bug occurs here
       print(result)
 
 3. **Include**:

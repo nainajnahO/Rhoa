@@ -21,7 +21,7 @@ Basic MACD
    df = pd.read_csv('prices.csv')
 
    # Calculate MACD with default parameters (12, 26, 9)
-   macd_data = df['Close'].indicators.macd()
+   macd_data = df['Close'].rhoa.indicators.macd()
 
    # Extract components
    df['MACD'] = macd_data['macd']
@@ -36,7 +36,7 @@ Custom Parameters
 .. code-block:: python
 
    # Use custom parameters: fast=8, slow=21, signal=5
-   macd_data = df['Close'].indicators.macd(
+   macd_data = df['Close'].rhoa.indicators.macd(
        fast_period=8,
        slow_period=21,
        signal_period=5
@@ -47,7 +47,7 @@ MACD Crossover Signals
 
 .. code-block:: python
 
-   macd_data = df['Close'].indicators.macd()
+   macd_data = df['Close'].rhoa.indicators.macd()
    macd = macd_data['macd']
    signal = macd_data['signal']
 
@@ -71,7 +71,7 @@ MACD Histogram Analysis
 
 .. code-block:: python
 
-   macd_data = df['Close'].indicators.macd()
+   macd_data = df['Close'].rhoa.indicators.macd()
    histogram = macd_data['histogram']
 
    # Histogram turning positive (momentum shift)
@@ -94,7 +94,7 @@ Basic Bollinger Bands
 .. code-block:: python
 
    # Calculate Bollinger Bands (20-period, 2 std devs)
-   bb = df['Close'].indicators.bollinger_bands(window_size=20, num_std=2.0)
+   bb = df['Close'].rhoa.indicators.bollinger_bands(window_size=20, num_std=2.0)
 
    df['BB_Upper'] = bb['upper_band']
    df['BB_Middle'] = bb['middle_band']
@@ -109,7 +109,7 @@ Identify low volatility periods that often precede large moves:
 
 .. code-block:: python
 
-   bb = df['Close'].indicators.bollinger_bands(window_size=20, num_std=2.0)
+   bb = df['Close'].rhoa.indicators.bollinger_bands(window_size=20, num_std=2.0)
 
    # Calculate band width
    band_width = (bb['upper_band'] - bb['lower_band']) / bb['middle_band']
@@ -126,7 +126,7 @@ Bollinger Band Breakouts
 
 .. code-block:: python
 
-   bb = df['Close'].indicators.bollinger_bands(window_size=20, num_std=2.0)
+   bb = df['Close'].rhoa.indicators.bollinger_bands(window_size=20, num_std=2.0)
 
    # Price touching or exceeding upper band
    upper_touch = df['Close'] >= bb['upper_band']
@@ -148,7 +148,7 @@ Calculate where price is relative to the bands:
 
 .. code-block:: python
 
-   bb = df['Close'].indicators.bollinger_bands(window_size=20, num_std=2.0)
+   bb = df['Close'].rhoa.indicators.bollinger_bands(window_size=20, num_std=2.0)
 
    # %B = (Close - Lower Band) / (Upper Band - Lower Band)
    # %B > 1: above upper band
@@ -173,7 +173,7 @@ Basic ADX
 .. code-block:: python
 
    # Calculate ADX with 14-period window
-   adx_data = df['Close'].indicators.adx(
+   adx_data = df['Close'].rhoa.indicators.adx(
        high=df['High'],
        low=df['Low'],
        window_size=14
@@ -190,7 +190,7 @@ Interpret ADX Values
 
 .. code-block:: python
 
-   adx_data = df['Close'].indicators.adx(df['High'], df['Low'], 14)
+   adx_data = df['Close'].rhoa.indicators.adx(df['High'], df['Low'], 14)
    adx = adx_data['ADX']
 
    # ADX interpretation
@@ -212,7 +212,7 @@ Directional Movement Strategy
 
 .. code-block:: python
 
-   adx_data = df['Close'].indicators.adx(df['High'], df['Low'], 14)
+   adx_data = df['Close'].rhoa.indicators.adx(df['High'], df['Low'], 14)
 
    adx = adx_data['ADX']
    plus_di = adx_data['+DI']
@@ -242,7 +242,7 @@ Basic ATR
 .. code-block:: python
 
    # Calculate 14-period ATR
-   atr = df['Close'].indicators.atr(
+   atr = df['Close'].rhoa.indicators.atr(
        high=df['High'],
        low=df['Low'],
        window_size=14
@@ -257,7 +257,7 @@ Volatility Regimes
 
 .. code-block:: python
 
-   atr = df['Close'].indicators.atr(df['High'], df['Low'], 14)
+   atr = df['Close'].rhoa.indicators.atr(df['High'], df['Low'], 14)
 
    # Define volatility regimes using percentiles
    low_vol = atr < atr.quantile(0.33)
@@ -273,7 +273,7 @@ ATR-Based Position Sizing
 
 .. code-block:: python
 
-   atr = df['Close'].indicators.atr(df['High'], df['Low'], 14)
+   atr = df['Close'].rhoa.indicators.atr(df['High'], df['Low'], 14)
 
    # Risk per trade: 2% of account
    account_size = 100000
@@ -298,7 +298,7 @@ Basic Stochastic
 .. code-block:: python
 
    # Calculate Stochastic with 14-period %K and 3-period %D
-   stoch = df['Close'].indicators.stochastic(
+   stoch = df['Close'].rhoa.indicators.stochastic(
        high=df['High'],
        low=df['Low'],
        k_window=14,
@@ -315,7 +315,7 @@ Stochastic Signals
 
 .. code-block:: python
 
-   stoch = df['Close'].indicators.stochastic(df['High'], df['Low'], 14, 3)
+   stoch = df['Close'].rhoa.indicators.stochastic(df['High'], df['Low'], 14, 3)
    k = stoch['%K']
    d = stoch['%D']
 
@@ -347,7 +347,7 @@ Basic CCI
 .. code-block:: python
 
    # Calculate 20-period CCI
-   cci = df['Close'].indicators.cci(
+   cci = df['Close'].rhoa.indicators.cci(
        high=df['High'],
        low=df['Low'],
        window_size=20
@@ -361,7 +361,7 @@ CCI Trading Signals
 
 .. code-block:: python
 
-   cci = df['Close'].indicators.cci(df['High'], df['Low'], 20)
+   cci = df['Close'].rhoa.indicators.cci(df['High'], df['Low'], 20)
 
    # Traditional levels
    # > +100: Overbought
@@ -392,7 +392,7 @@ Basic SAR
 .. code-block:: python
 
    # Calculate Parabolic SAR
-   sar = df['Close'].indicators.parabolic_sar(
+   sar = df['Close'].rhoa.indicators.parabolic_sar(
        high=df['High'],
        low=df['Low']
    )
@@ -411,7 +411,7 @@ SAR Reversals
 
 .. code-block:: python
 
-   sar = df['Close'].indicators.parabolic_sar(df['High'], df['Low'])
+   sar = df['Close'].rhoa.indicators.parabolic_sar(df['High'], df['Low'])
 
    # Detect trend reversals
    uptrend = df['Close'] > sar
@@ -437,9 +437,9 @@ Trend + Momentum Confirmation
 .. code-block:: python
 
    # Calculate indicators
-   adx_data = df['Close'].indicators.adx(df['High'], df['Low'], 14)
-   macd_data = df['Close'].indicators.macd()
-   bb = df['Close'].indicators.bollinger_bands(20, 2.0)
+   adx_data = df['Close'].rhoa.indicators.adx(df['High'], df['Low'], 14)
+   macd_data = df['Close'].rhoa.indicators.macd()
+   bb = df['Close'].rhoa.indicators.bollinger_bands(20, 2.0)
 
    # Strong trend confirmation
    strong_trend = adx_data['ADX'] > 25
@@ -457,9 +457,9 @@ Volatility Breakout System
 .. code-block:: python
 
    # Combine Bollinger Bands + ATR + ADX
-   bb = df['Close'].indicators.bollinger_bands(20, 2.0)
-   atr = df['Close'].indicators.atr(df['High'], df['Low'], 14)
-   adx_data = df['Close'].indicators.adx(df['High'], df['Low'], 14)
+   bb = df['Close'].rhoa.indicators.bollinger_bands(20, 2.0)
+   atr = df['Close'].rhoa.indicators.atr(df['High'], df['Low'], 14)
+   adx_data = df['Close'].rhoa.indicators.adx(df['High'], df['Low'], 14)
 
    # Squeeze: low volatility
    band_width = (bb['upper_band'] - bb['lower_band']) / bb['middle_band']
@@ -487,16 +487,16 @@ Complete Technical Analysis Dashboard
        low = df['Low']
 
        # Trend indicators
-       macd = close.indicators.macd()
-       adx = close.indicators.adx(high, low, 14)
+       macd = close.rhoa.indicators.macd()
+       adx = close.rhoa.indicators.adx(high, low, 14)
 
        # Momentum
-       rsi = close.indicators.rsi(14)
-       stoch = close.indicators.stochastic(high, low, 14, 3)
+       rsi = close.rhoa.indicators.rsi(14)
+       stoch = close.rhoa.indicators.stochastic(high, low, 14, 3)
 
        # Volatility
-       bb = close.indicators.bollinger_bands(20, 2.0)
-       atr = close.indicators.atr(high, low, 14)
+       bb = close.rhoa.indicators.bollinger_bands(20, 2.0)
+       atr = close.rhoa.indicators.atr(high, low, 14)
 
        # Summary
        print("=" * 50)

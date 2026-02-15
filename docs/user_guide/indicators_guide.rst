@@ -121,11 +121,11 @@ Where:
    prices = df['Close']
 
    # Basic SMA
-   sma_20 = prices.indicators.sma(window_size=20)
+   sma_20 = prices.rhoa.indicators.sma(window_size=20)
 
    # Multiple SMAs for crossover strategy
-   sma_50 = prices.indicators.sma(window_size=50)
-   sma_200 = prices.indicators.sma(window_size=200)
+   sma_50 = prices.rhoa.indicators.sma(window_size=50)
+   sma_200 = prices.rhoa.indicators.sma(window_size=200)
 
    # Golden cross: SMA 50 crosses above SMA 200
    golden_cross = (sma_50 > sma_200) & (sma_50.shift(1) <= sma_200.shift(1))
@@ -177,11 +177,11 @@ Where:
 .. code-block:: python
 
    # Basic EWMA
-   ewma_20 = prices.indicators.ewma(window_size=20)
+   ewma_20 = prices.rhoa.indicators.ewma(window_size=20)
 
    # Multiple EMAs for trend confirmation
-   ema_12 = prices.indicators.ewma(window_size=12)
-   ema_26 = prices.indicators.ewma(window_size=26)
+   ema_12 = prices.rhoa.indicators.ewma(window_size=12)
+   ema_26 = prices.rhoa.indicators.ewma(window_size=26)
 
    # EMA crossover strategy
    bullish = (ema_12 > ema_26) & (ema_12.shift(1) <= ema_26.shift(1))
@@ -243,7 +243,7 @@ Average Directional Index (ADX)
    low = df['Low']
 
    # Calculate ADX
-   adx_data = close.indicators.adx(high, low, window_size=14)
+   adx_data = close.rhoa.indicators.adx(high, low, window_size=14)
 
    adx = adx_data['ADX']
    plus_di = adx_data['+DI']
@@ -297,7 +297,7 @@ Parabolic SAR
 .. code-block:: python
 
    # Calculate Parabolic SAR
-   sar = close.indicators.parabolic_sar(
+   sar = close.rhoa.indicators.parabolic_sar(
        high, low,
        af_start=0.02,
        af_increment=0.02,
@@ -363,7 +363,7 @@ Relative Strength Index (RSI)
 .. code-block:: python
 
    # Basic RSI
-   rsi = prices.indicators.rsi(window_size=14)
+   rsi = prices.rhoa.indicators.rsi(window_size=14)
 
    # Identify overbought/oversold
    overbought = rsi > 70
@@ -424,7 +424,7 @@ MACD (Moving Average Convergence Divergence)
 .. code-block:: python
 
    # Calculate MACD
-   macd_data = prices.indicators.macd(
+   macd_data = prices.rhoa.indicators.macd(
        short_window=12,
        long_window=26,
        signal_window=9
@@ -494,7 +494,7 @@ Stochastic Oscillator
 .. code-block:: python
 
    # Calculate Stochastic
-   stoch = close.indicators.stochastic(
+   stoch = close.rhoa.indicators.stochastic(
        high, low,
        k_window=14,
        d_window=3
@@ -557,7 +557,7 @@ Williams %R
 .. code-block:: python
 
    # Calculate Williams %R
-   wr = close.indicators.williams_r(high, low, window_size=14)
+   wr = close.rhoa.indicators.williams_r(high, low, window_size=14)
 
    # Identify conditions
    overbought = wr > -20
@@ -609,7 +609,7 @@ Exponentially Weighted Moving Variance (EWMV)
 .. code-block:: python
 
    # Calculate EWMV
-   ewmv = prices.indicators.ewmv(window_size=20)
+   ewmv = prices.rhoa.indicators.ewmv(window_size=20)
 
    # Identify high volatility periods
    mean_variance = ewmv.rolling(50).mean()
@@ -648,7 +648,7 @@ Exponentially Weighted Moving Standard Deviation (EWMSTD)
 .. code-block:: python
 
    # Calculate EWMSTD
-   ewmstd = prices.indicators.ewmstd(window_size=20)
+   ewmstd = prices.rhoa.indicators.ewmstd(window_size=20)
 
    # Position sizing based on volatility
    base_position = 10000
@@ -704,7 +704,7 @@ Where:
 .. code-block:: python
 
    # Calculate Bollinger Bands
-   bb = prices.indicators.bollinger_bands(
+   bb = prices.rhoa.indicators.bollinger_bands(
        window_size=20,
        num_std=2.0
    )
@@ -772,7 +772,7 @@ Average True Range (ATR)
 .. code-block:: python
 
    # Calculate ATR
-   atr = close.indicators.atr(high, low, window_size=14)
+   atr = close.rhoa.indicators.atr(high, low, window_size=14)
 
    # Position sizing
    risk_per_trade = 1000  # $1000 risk per trade
@@ -832,7 +832,7 @@ Commodity Channel Index (CCI)
 .. code-block:: python
 
    # Calculate CCI
-   cci = close.indicators.cci(high, low, window_size=20)
+   cci = close.rhoa.indicators.cci(high, low, window_size=20)
 
    # Traditional signals
    overbought = cci > 100
@@ -887,12 +887,12 @@ Multi-Indicator Strategy Example
    low = df['Low']
 
    # Calculate multiple indicators
-   sma_50 = close.indicators.sma(50)
-   sma_200 = close.indicators.sma(200)
-   rsi = close.indicators.rsi(14)
-   macd_data = close.indicators.macd()
-   adx_data = close.indicators.adx(high, low, 14)
-   atr = close.indicators.atr(high, low, 14)
+   sma_50 = close.rhoa.indicators.sma(50)
+   sma_200 = close.rhoa.indicators.sma(200)
+   rsi = close.rhoa.indicators.rsi(14)
+   macd_data = close.rhoa.indicators.macd()
+   adx_data = close.rhoa.indicators.adx(high, low, 14)
+   atr = close.rhoa.indicators.atr(high, low, 14)
 
    # Define trading conditions
    # 1. Trend: Price above 50 SMA, 50 SMA above 200 SMA
@@ -985,11 +985,11 @@ For Large Datasets
 .. code-block:: python
 
    # Pre-calculate and store
-   df['SMA_50'] = df['Close'].indicators.sma(50)
-   df['RSI'] = df['Close'].indicators.rsi(14)
+   df['SMA_50'] = df['Close'].rhoa.indicators.sma(50)
+   df['RSI'] = df['Close'].rhoa.indicators.rsi(14)
 
    # Rather than recalculating each time
-   # sma = df['Close'].indicators.sma(50)  # Recalculates
+   # sma = df['Close'].rhoa.indicators.sma(50)  # Recalculates
 
 Using with NumPy
 ~~~~~~~~~~~~~~~~
@@ -997,7 +997,7 @@ Using with NumPy
 .. code-block:: python
 
    # Indicators return pandas Series
-   rsi = prices.indicators.rsi(14)
+   rsi = prices.rhoa.indicators.rsi(14)
 
    # Convert to numpy for faster operations
    rsi_array = rsi.values

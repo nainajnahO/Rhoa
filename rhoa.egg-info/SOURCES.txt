@@ -2,9 +2,12 @@ LICENSE
 README.md
 pyproject.toml
 rhoa/__init__.py
+rhoa/accessor.py
 rhoa/data.py
 rhoa/indicators.py
+rhoa/plots.py
 rhoa/preprocess.py
+rhoa/py.typed
 rhoa/strategy.py
 rhoa/targets.py
 rhoa.egg-info/PKG-INFO
@@ -13,3 +16,4 @@ rhoa.egg-info/dependency_links.txt
 rhoa.egg-info/requires.txt
 rhoa.egg-info/top_level.txt
 tests/test_indicators.py
+tests/test_targets.py

@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__version__ = "0.1.9"
+__version__ = "0.2.0"
 
 from typing import TYPE_CHECKING
 
@@ -34,17 +34,9 @@ if TYPE_CHECKING:
 
     class Series(pd.Series):  # type: ignore[no-redef]
         @property
-        def indicators(self) -> indicators: ...
-        @property
         def rhoa(self) -> RhoaSeriesAccessor: ...
 
     class DataFrame(pd.DataFrame):  # type: ignore[no-redef]
-        @property
-        def plots(self) -> PlotsAccessor: ...
-        @property
-        def preprocess(self) -> PreprocessAccessor: ...
-        @property
-        def strategy(self) -> StrategyAccessor: ...
         @property
         def rhoa(self) -> RhoaDataFrameAccessor: ...
         @overload

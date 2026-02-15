@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: rhoa
-Version: 0.1.7
+Version: 0.2.0
 Summary: A pandas DataFrame extension for technical analysis.
 Author-email: nainajnahO <d.ohanjanian@icloud.com>
 License-Expression: GPL-3.0-or-later
@@ -37,17 +37,215 @@ Dynamic: license-file
   [![PyPI version](https://img.shields.io/pypi/v/rhoa)](https://pypi.org/project/rhoa/)
   [![Documentation](https://img.shields.io/badge/docs-available-brightgreen)](https://nainajnaho.github.io/Rhoa/)
   [![License](https://img.shields.io/pypi/l/rhoa)](https://github.com/nainajnahO/Rhoa/blob/main/LICENSE)
-  [![Python versions](https://img.shields.io/pypi/pyversions/rhoa)](okhttps://pypi.org/project/rhoa/)
+  [![Python versions](https://img.shields.io/pypi/pyversions/rhoa)](https://pypi.org/project/rhoa/)
 
-  **Rhoa is a Python package providing functions and pandas DataFrame extension accessors for technical analysis.**
+  **Rhoa is a Python package providing pandas DataFrame extension accessors for technical analysis and machine learning in financial markets.**
 </div>
 
-## License
+---
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+## 🎯 Features
 
-## Installation
+- **📊 13 Technical Indicators** - Professional-grade indicators accessible via pandas Series extension
+  - Moving averages (SMA, EWMA)
+  - Momentum oscillators (RSI, MACD, Stochastic, Williams %R, CCI)
+  - Volatility indicators (ATR, Bollinger Bands, EWMSTD)
+  - Trend indicators (ADX, Parabolic SAR)
+
+- **🤖 ML Target Generation** - Intelligent binary target generation for machine learning
+  - Auto mode with Pareto optimization
+  - Manual mode with elbow method
+  - 8 different target calculation methods
+  - Optimal threshold detection
+
+- **📈 Visualization** - Professional charting for prediction analysis
+  - Price charts with buy signals
+  - Confusion matrices
+  - Color-coded performance markers
+  - Publication-quality output
+
+- **🔗 Pandas Integration** - Seamless integration with pandas workflows
+  - Native DataFrame/Series accessors
+  - Method chaining support
+  - Type hints throughout
+
+## 🚀 Quick Start
+
+### Installation
 
 ```bash
 pip install rhoa
 ```
+
+### Basic Usage
+
+```python
+import pandas as pd
+import rhoa
+
+# Load your price data
+df = rhoa.read_csv('stock_prices.csv')
+
+# Calculate technical indicators using Series accessor
+df['SMA_20'] = df['Close'].rhoa.indicators.sma(window_size=20)
+df['RSI_14'] = df['Close'].rhoa.indicators.rsi(window_size=14)
+
+# Calculate MACD
+macd_data = df['Close'].rhoa.indicators.macd()
+df['MACD'] = macd_data['macd']
+df['Signal'] = macd_data['signal']
+
+# Calculate Bollinger Bands
+bb = df['Close'].rhoa.indicators.bollinger_bands(window_size=20, num_std=2.0)
+df['BB_Upper'] = bb['upper_band']
+df['BB_Lower'] = bb['lower_band']
+```
+
+### Generate ML Targets
+
+```python
+from rhoa.targets import generate_target_combinations
+
+# Generate optimized binary targets with Pareto optimization
+targets, metadata = generate_target_combinations(
+    df,
+    mode='auto',
+    target_class_balance=0.5  # Aim for 50% positive instances
+)
+
+# Check what parameters were found optimal
+print(metadata['method_7'])
+# {'period': 6, 'threshold': 4.0, 'instances': 249, 'pct_of_max': 8.9}
+
+# Combine with features for ML pipeline
+ml_data = pd.concat([df, targets], axis=1)
+```
+
+### Visualize Predictions
+
+```python
+# After training your model and getting predictions
+predictions = model.predict(X_test)
+
+# Plot with confusion matrix
+fig = df.rhoa.plots.signal(
+    y_pred=predictions,
+    y_true=y_test,
+    date_col='Date',
+    price_col='Close'
+)
+```
+
+## 📚 Documentation
+
+Full documentation is available at **[https://nainajnaho.github.io/Rhoa/](https://nainajnaho.github.io/Rhoa/)**
+
+- [Installation Guide](https://nainajnaho.github.io/Rhoa/installation.html)
+- [Quick Start Tutorial](https://nainajnaho.github.io/Rhoa/quickstart.html)
+- [User Guide](https://nainajnaho.github.io/Rhoa/user_guide/index.html)
+- [API Reference](https://nainajnaho.github.io/Rhoa/api/index.html)
+- [Examples](https://nainajnaho.github.io/Rhoa/examples/index.html)
+- [FAQ](https://nainajnaho.github.io/Rhoa/faq.html)
+
+## 💡 Examples
+
+### Example 1: Find Overbought Conditions
+
+```python
+import pandas as pd
+import rhoa
+
+df = rhoa.read_csv('prices.csv')
+
+# Calculate RSI
+rsi = df['Close'].rhoa.indicators.rsi(window_size=14)
+
+# Find overbought periods (RSI > 70)
+overbought = df[rsi > 70]
+print(f"Found {len(overbought)} overbought periods")
+```
+
+### Example 2: Detect MACD Crossovers
+
+```python
+# Calculate MACD
+macd_data = df['Close'].rhoa.indicators.macd()
+macd = macd_data['macd']
+signal = macd_data['signal']
+
+# Find bullish crossovers
+bullish = (macd > signal) & (macd.shift(1) <= signal.shift(1))
+print(f"Bullish crossovers: {bullish.sum()}")
+```
+
+### Example 3: Complete ML Pipeline
+
+```python
+from rhoa.targets import generate_target_combinations
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+
+# Generate features
+df['SMA_20'] = df['Close'].rhoa.indicators.sma(20)
+df['RSI_14'] = df['Close'].rhoa.indicators.rsi(14)
+df['ATR_14'] = df['Close'].rhoa.indicators.atr(df['High'], df['Low'], 14)
+
+# Generate targets
+targets, meta = generate_target_combinations(df, mode='auto')
+
+# Prepare data
+X = df[['SMA_20', 'RSI_14', 'ATR_14']].dropna()
+y = targets['Target_7'].loc[X.index]
+
+# Train model
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+print(f"Accuracy: {model.score(X_test, y_test):.2%}")
+```
+
+## 🛠️ Development Status
+
+Rhoa is currently in **pre-alpha** development (v0.1.7). The API may change between versions.
+
+### Roadmap
+
+- [ ] Core technical indicators (*In progress...*)
+- [ ] ML target generation (*In progress...*)
+- [ ] Visualization tools (*In progress...*)
+- [ ] Strategy framework
+- [ ] Advanced preprocessing utilities
+- [ ] Backtesting engine
+
+## 📋 Requirements
+
+- Python >= 3.9
+- pandas >= 1.3
+- numpy >= 1.21
+
+Optional dependencies for specific features:
+- `kneed` - For elbow method in target generation
+- `paretoset` - For Pareto optimization
+- `scikit-learn` - For confusion matrices
+- `matplotlib` - For visualization
+- `seaborn` - For enhanced plotting
+
+## 📄 License
+
+This project is licensed under the **GNU General Public License v3.0** - see the [LICENSE](LICENSE) file for details.
+
+## 🔗 Links
+
+- **Documentation:** https://nainajnaho.github.io/Rhoa/
+- **PyPI:** https://pypi.org/project/rhoa/
+- **Source Code:** https://github.com/nainajnahO/Rhoa
+- **Issue Tracker:** https://github.com/nainajnahO/Rhoa/issues
+- **Changelog:** [CHANGELOG.md](CHANGELOG.md)
+- 
+## 📊 Project Status
+
+![GitHub last commit](https://img.shields.io/github/last-commit/nainajnahO/Rhoa)
+![GitHub issues](https://img.shields.io/github/issues/nainajnahO/Rhoa)
+
+---

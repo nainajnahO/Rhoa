@@ -19,7 +19,7 @@ Calculate a 20-period Simple Moving Average:
    prices = df['close']
    
    # Calculate 20-period SMA
-   sma_20 = prices.indicators.sma(window_size=20)
+   sma_20 = prices.rhoa.indicators.sma(window_size=20)
    print(sma_20.head())
 
 RSI (Relative Strength Index)
@@ -30,7 +30,7 @@ Calculate the RSI indicator:
 .. code-block:: python
 
    # Calculate 14-period RSI
-   rsi = prices.indicators.rsi(window_size=14)
+   rsi = prices.rhoa.indicators.rsi(window_size=14)
    
    # Find overbought conditions (RSI > 70)
    overbought = rsi > 70
@@ -44,7 +44,7 @@ Calculate MACD with custom parameters:
 .. code-block:: python
 
    # Calculate MACD with default parameters (12, 26, 9)
-   macd_data = prices.indicators.macd()
+   macd_data = prices.rhoa.indicators.macd()
    
    # Access individual components
    macd_line = macd_data['macd']
@@ -62,7 +62,7 @@ Calculate Bollinger Bands:
 .. code-block:: python
 
    # Calculate Bollinger Bands (20-period, 2 standard deviations)
-   bb = prices.indicators.bollinger_bands(window_size=20, num_std=2.0)
+   bb = prices.rhoa.indicators.bollinger_bands(window_size=20, num_std=2.0)
    
    # Check for price touching upper band
    touching_upper = prices >= bb['upper_band']
@@ -78,9 +78,9 @@ Combine multiple indicators for analysis:
 .. code-block:: python
 
    # Calculate multiple indicators
-   sma_50 = prices.indicators.sma(window_size=50)
-   rsi_14 = prices.indicators.rsi(window_size=14)
-   bb = prices.indicators.bollinger_bands()
+   sma_50 = prices.rhoa.indicators.sma(window_size=50)
+   rsi_14 = prices.rhoa.indicators.rsi(window_size=14)
+   bb = prices.rhoa.indicators.bollinger_bands()
    
    # Create a comprehensive analysis DataFrame
    analysis = pd.DataFrame({
@@ -107,15 +107,15 @@ For indicators that require OHLC data:
    close = df['close']
    
    # Average True Range
-   atr = close.indicators.atr(high, low, window_size=14)
+   atr = close.rhoa.indicators.atr(high, low, window_size=14)
    
    # Stochastic Oscillator
-   stoch = close.indicators.stochastic(high, low, k_window=14, d_window=3)
+   stoch = close.rhoa.indicators.stochastic(high, low, k_window=14, d_window=3)
    k_percent = stoch['%K']
    d_percent = stoch['%D']
    
    # ADX (Average Directional Index)
-   adx_data = close.indicators.adx(high, low, window_size=14)
+   adx_data = close.rhoa.indicators.adx(high, low, window_size=14)
    adx = adx_data['ADX']
    plus_di = adx_data['+DI']
    minus_di = adx_data['-DI']

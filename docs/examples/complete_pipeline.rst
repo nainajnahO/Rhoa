@@ -31,12 +31,12 @@ Step-by-Step Pipeline
    high = df['High']
    low = df['Low']
 
-   df['SMA_20'] = close.indicators.sma(20)
-   df['SMA_50'] = close.indicators.sma(50)
-   df['RSI_14'] = close.indicators.rsi(14)
-   df['ATR_14'] = close.indicators.atr(high, low, 14)
+   df['SMA_20'] = close.rhoa.indicators.sma(20)
+   df['SMA_50'] = close.rhoa.indicators.sma(50)
+   df['RSI_14'] = close.rhoa.indicators.rsi(14)
+   df['ATR_14'] = close.rhoa.indicators.atr(high, low, 14)
 
-   macd = close.indicators.macd()
+   macd = close.rhoa.indicators.macd()
    df['MACD'] = macd['macd']
    df['MACD_Signal'] = macd['signal']
 
@@ -114,10 +114,10 @@ Feature Engineering Pipeline
        df['Log_Returns'] = np.log(close / close.shift(1))
 
        # Moving averages
-       df['SMA_10'] = close.indicators.sma(10)
-       df['SMA_20'] = close.indicators.sma(20)
-       df['SMA_50'] = close.indicators.sma(50)
-       df['SMA_200'] = close.indicators.sma(200)
+       df['SMA_10'] = close.rhoa.indicators.sma(10)
+       df['SMA_20'] = close.rhoa.indicators.sma(20)
+       df['SMA_50'] = close.rhoa.indicators.sma(50)
+       df['SMA_200'] = close.rhoa.indicators.sma(200)
 
        # MA relationships
        df['SMA_10_20_ratio'] = df['SMA_10'] / df['SMA_20']
@@ -125,26 +125,26 @@ Feature Engineering Pipeline
        df['Price_SMA20_ratio'] = close / df['SMA_20']
 
        # Momentum indicators
-       df['RSI_14'] = close.indicators.rsi(14)
-       df['RSI_28'] = close.indicators.rsi(28)
+       df['RSI_14'] = close.rhoa.indicators.rsi(14)
+       df['RSI_28'] = close.rhoa.indicators.rsi(28)
 
-       macd = close.indicators.macd()
+       macd = close.rhoa.indicators.macd()
        df['MACD'] = macd['macd']
        df['MACD_Signal'] = macd['signal']
        df['MACD_Hist'] = macd['histogram']
 
        # Volatility
-       df['ATR_14'] = close.indicators.atr(high, low, 14)
-       df['ATR_28'] = close.indicators.atr(high, low, 28)
+       df['ATR_14'] = close.rhoa.indicators.atr(high, low, 14)
+       df['ATR_28'] = close.rhoa.indicators.atr(high, low, 28)
 
-       bb = close.indicators.bollinger_bands(20, 2.0)
+       bb = close.rhoa.indicators.bollinger_bands(20, 2.0)
        df['BB_Upper'] = bb['upper_band']
        df['BB_Lower'] = bb['lower_band']
        df['BB_Width'] = (bb['upper_band'] - bb['lower_band']) / bb['middle_band']
        df['BB_Position'] = (close - bb['lower_band']) / (bb['upper_band'] - bb['lower_band'])
 
        # Trend strength
-       adx = close.indicators.adx(high, low, 14)
+       adx = close.rhoa.indicators.adx(high, low, 14)
        df['ADX'] = adx['ADX']
        df['Plus_DI'] = adx['+DI']
        df['Minus_DI'] = adx['-DI']
@@ -370,16 +370,16 @@ Pipeline Class
            features = df.copy()
 
            # Technical indicators
-           features['SMA_20'] = close.indicators.sma(20)
-           features['SMA_50'] = close.indicators.sma(50)
-           features['RSI_14'] = close.indicators.rsi(14)
-           features['ATR_14'] = close.indicators.atr(high, low, 14)
+           features['SMA_20'] = close.rhoa.indicators.sma(20)
+           features['SMA_50'] = close.rhoa.indicators.sma(50)
+           features['RSI_14'] = close.rhoa.indicators.rsi(14)
+           features['ATR_14'] = close.rhoa.indicators.atr(high, low, 14)
 
-           macd = close.indicators.macd()
+           macd = close.rhoa.indicators.macd()
            features['MACD'] = macd['macd']
            features['MACD_Signal'] = macd['signal']
 
-           bb = close.indicators.bollinger_bands(20, 2.0)
+           bb = close.rhoa.indicators.bollinger_bands(20, 2.0)
            features['BB_Width'] = (bb['upper_band'] - bb['lower_band']) / bb['middle_band']
 
            # Returns
@@ -542,12 +542,12 @@ Putting it all together.
    high = df['High']
    low = df['Low']
 
-   df['SMA_20'] = close.indicators.sma(20)
-   df['SMA_50'] = close.indicators.sma(50)
-   df['RSI_14'] = close.indicators.rsi(14)
-   df['ATR_14'] = close.indicators.atr(high, low, 14)
+   df['SMA_20'] = close.rhoa.indicators.sma(20)
+   df['SMA_50'] = close.rhoa.indicators.sma(50)
+   df['RSI_14'] = close.rhoa.indicators.rsi(14)
+   df['ATR_14'] = close.rhoa.indicators.atr(high, low, 14)
 
-   macd = close.indicators.macd()
+   macd = close.rhoa.indicators.macd()
    df['MACD'] = macd['macd']
    df['MACD_Signal'] = macd['signal']
 
@@ -574,7 +574,7 @@ Putting it all together.
    print(classification_report(y_test, y_pred))
 
    # 8. Visualize predictions
-   fig = ml_df.iloc[split_idx:].plots.signal(
+   fig = ml_df.iloc[split_idx:].rhoa.plots.signal(
        y_pred=y_pred,
        y_true=y_test,
        date_col='Date',

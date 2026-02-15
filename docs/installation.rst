@@ -152,7 +152,7 @@ After installation, verify that Rhoa is working correctly:
 
    # Test basic functionality
    series = pd.Series([1, 2, 3, 4, 5])
-   sma = series.indicators.sma(window_size=3)
+   sma = series.rhoa.indicators.sma(window_size=3)
    print(sma)
 
 You should see output similar to:
@@ -196,7 +196,7 @@ Common Issues
       import pandas as pd
 
       # Now you can use .indicators
-      series.indicators.sma()
+      series.rhoa.indicators.sma()
 
 **Version Conflicts**
    If you encounter version conflicts with pandas or numpy:

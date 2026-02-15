@@ -52,19 +52,19 @@ import pandas as pd
 import rhoa
 
 # Load your price data
-df = pd.read_csv('stock_prices.csv')
+df = rhoa.read_csv('stock_prices.csv')
 
 # Calculate technical indicators using Series accessor
-df['SMA_20'] = df['Close'].indicators.sma(window_size=20)
-df['RSI_14'] = df['Close'].indicators.rsi(window_size=14)
+df['SMA_20'] = df['Close'].rhoa.indicators.sma(window_size=20)
+df['RSI_14'] = df['Close'].rhoa.indicators.rsi(window_size=14)
 
 # Calculate MACD
-macd_data = df['Close'].indicators.macd()
+macd_data = df['Close'].rhoa.indicators.macd()
 df['MACD'] = macd_data['macd']
 df['Signal'] = macd_data['signal']
 
 # Calculate Bollinger Bands
-bb = df['Close'].indicators.bollinger_bands(window_size=20, num_std=2.0)
+bb = df['Close'].rhoa.indicators.bollinger_bands(window_size=20, num_std=2.0)
 df['BB_Upper'] = bb['upper_band']
 df['BB_Lower'] = bb['lower_band']
 ```
@@ -96,7 +96,7 @@ ml_data = pd.concat([df, targets], axis=1)
 predictions = model.predict(X_test)
 
 # Plot with confusion matrix
-fig = df.plots.signal(
+fig = df.rhoa.plots.signal(
     y_pred=predictions,
     y_true=y_test,
     date_col='Date',
@@ -123,10 +123,10 @@ Full documentation is available at **[https://nainajnaho.github.io/Rhoa/](https:
 import pandas as pd
 import rhoa
 
-df = pd.read_csv('prices.csv')
+df = rhoa.read_csv('prices.csv')
 
 # Calculate RSI
-rsi = df['Close'].indicators.rsi(window_size=14)
+rsi = df['Close'].rhoa.indicators.rsi(window_size=14)
 
 # Find overbought periods (RSI > 70)
 overbought = df[rsi > 70]
@@ -137,7 +137,7 @@ print(f"Found {len(overbought)} overbought periods")
 
 ```python
 # Calculate MACD
-macd_data = df['Close'].indicators.macd()
+macd_data = df['Close'].rhoa.indicators.macd()
 macd = macd_data['macd']
 signal = macd_data['signal']
 
@@ -154,9 +154,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 
 # Generate features
-df['SMA_20'] = df['Close'].indicators.sma(20)
-df['RSI_14'] = df['Close'].indicators.rsi(14)
-df['ATR_14'] = df['Close'].indicators.atr(df['High'], df['Low'], 14)
+df['SMA_20'] = df['Close'].rhoa.indicators.sma(20)
+df['RSI_14'] = df['Close'].rhoa.indicators.rsi(14)
+df['ATR_14'] = df['Close'].rhoa.indicators.atr(df['High'], df['Low'], 14)
 
 # Generate targets
 targets, meta = generate_target_combinations(df, mode='auto')

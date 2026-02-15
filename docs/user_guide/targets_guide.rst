@@ -647,7 +647,7 @@ End-to-End ML Pipeline
    #          1       0.76      0.69      0.72
 
    # 11. Visualize results
-   test_clean.plots.signal(
+   test_clean.rhoa.plots.signal(
        y_pred=y_pred,
        y_true=y_test,
        date_col='Date',

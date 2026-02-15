@@ -30,10 +30,6 @@ import pandas
 import numpy
 from pandas import Series
 from pandas import DataFrame
-from pandas.api.extensions import register_series_accessor
-
-
-@register_series_accessor("indicators")
 class indicators:
     def __init__(self, series: Series) -> None:
         self._series = series
@@ -101,15 +97,15 @@ class indicators:
         >>> import pandas as pd
         >>> import rhoa
         >>> prices = pd.Series([100, 102, 101, 103, 105, 104, 106])
-        >>> sma = prices.indicators.sma(window_size=5)
+        >>> sma = prices.rhoa.indicators.sma(window_size=5)
         >>> print(sma.iloc[4])  # First valid SMA value
         102.2
 
         Generate trading signals using SMA crossover:
 
         >>> prices = pd.Series([100, 102, 104, 106, 108, 107, 105, 103, 101])
-        >>> sma_short = prices.indicators.sma(window_size=3)
-        >>> sma_long = prices.indicators.sma(window_size=5)
+        >>> sma_short = prices.rhoa.indicators.sma(window_size=3)
+        >>> sma_long = prices.rhoa.indicators.sma(window_size=5)
         >>> buy_signal = (sma_short > sma_long) & (sma_short.shift(1) <= sma_long.shift(1))
         """
         return self._series.rolling(window=window_size, min_periods=min_periods, center=center, **kwargs).mean()
@@ -186,14 +182,14 @@ class indicators:
         >>> import pandas as pd
         >>> import rhoa
         >>> prices = pd.Series([100, 102, 101, 103, 105, 104, 106, 108])
-        >>> ewma = prices.indicators.ewma(window_size=5)
+        >>> ewma = prices.rhoa.indicators.ewma(window_size=5)
         >>> print(f"Latest EWMA: {ewma.iloc[-1]:.2f}")
         Latest EWMA: 105.45
 
         Compare EWMA with different window sizes:
 
-        >>> ewma_fast = prices.indicators.ewma(window_size=5)
-        >>> ewma_slow = prices.indicators.ewma(window_size=20)
+        >>> ewma_fast = prices.rhoa.indicators.ewma(window_size=5)
+        >>> ewma_slow = prices.rhoa.indicators.ewma(window_size=20)
         >>> crossover = (ewma_fast > ewma_slow) & (ewma_fast.shift(1) <= ewma_slow.shift(1))
         """
         return self._series.ewm(span=window_size, adjust=adjust, min_periods=min_periods, **kwargs).mean()
@@ -267,14 +263,14 @@ class indicators:
         >>> import pandas as pd
         >>> import rhoa
         >>> prices = pd.Series([100, 102, 99, 103, 105, 101, 106, 104])
-        >>> ewmv = prices.indicators.ewmv(window_size=5)
+        >>> ewmv = prices.rhoa.indicators.ewmv(window_size=5)
         >>> print(f"Latest variance: {ewmv.iloc[-1]:.2f}")
         Latest variance: 6.24
 
         Detect periods of high volatility:
 
         >>> prices = pd.Series([100, 102, 101, 103, 105, 104, 110, 95, 105, 100])
-        >>> ewmv = prices.indicators.ewmv(window_size=5)
+        >>> ewmv = prices.rhoa.indicators.ewmv(window_size=5)
         >>> high_volatility = ewmv > ewmv.rolling(20).mean() * 1.5
         """
         return self._series.ewm(span=window_size, adjust=adjust, min_periods=min_periods, **kwargs).var()
@@ -353,14 +349,14 @@ class indicators:
         >>> import pandas as pd
         >>> import rhoa
         >>> prices = pd.Series([100, 102, 99, 103, 105, 101, 106, 104])
-        >>> ewmstd = prices.indicators.ewmstd(window_size=5)
+        >>> ewmstd = prices.rhoa.indicators.ewmstd(window_size=5)
         >>> print(f"Latest volatility: {ewmstd.iloc[-1]:.2f}")
         Latest volatility: 2.50
 
         Use EWMSTD for volatility-adjusted position sizing:
 
         >>> prices = pd.Series([100, 102, 104, 106, 108, 110, 112])
-        >>> volatility = prices.indicators.ewmstd(window_size=10)
+        >>> volatility = prices.rhoa.indicators.ewmstd(window_size=10)
         >>> position_size = 1000 / volatility  # Risk-adjusted sizing
         """
         return self._series.ewm(span=window_size, adjust=adjust, min_periods=min_periods, **kwargs).std()
@@ -445,7 +441,7 @@ class indicators:
         >>> import pandas as pd
         >>> import rhoa
         >>> prices = pd.Series([100, 102, 104, 103, 105, 107, 106, 108, 110, 109])
-        >>> rsi = prices.indicators.rsi(window_size=14)
+        >>> rsi = prices.rhoa.indicators.rsi(window_size=14)
         >>> overbought = rsi > 70  # Potential sell signals
         >>> oversold = rsi < 30   # Potential buy signals
         >>> print(f"Latest RSI: {rsi.iloc[-1]:.1f}")
@@ -454,7 +450,7 @@ class indicators:
         Detect RSI divergence for reversal signals:
 
         >>> prices = pd.Series([100, 105, 110, 115, 120, 118, 116, 114])
-        >>> rsi = prices.indicators.rsi()
+        >>> rsi = prices.rhoa.indicators.rsi()
         >>> # Bearish divergence: price makes new high but RSI doesn't
         >>> price_higher = prices > prices.shift(1).rolling(5).max()
         >>> rsi_lower = rsi < rsi.shift(1).rolling(5).max()
@@ -564,7 +560,7 @@ class indicators:
         >>> import pandas as pd
         >>> import rhoa
         >>> prices = pd.Series([100, 102, 104, 103, 105, 107, 106, 108, 110])
-        >>> macd_data = prices.indicators.macd()
+        >>> macd_data = prices.rhoa.indicators.macd()
         >>> # Bullish signal: MACD crosses above signal
         >>> bullish = (macd_data['macd'] > macd_data['signal']) & \
         ...           (macd_data['macd'].shift(1) <= macd_data['signal'].shift(1))
@@ -573,7 +569,7 @@ class indicators:
 
         Analyze MACD histogram for momentum changes:
 
-        >>> macd_data = prices.indicators.macd()
+        >>> macd_data = prices.rhoa.indicators.macd()
         >>> histogram = macd_data['histogram']
         >>> momentum_increasing = histogram > histogram.shift(1)
         >>> momentum_peak = (histogram.shift(1) > histogram) & (histogram.shift(1) > histogram.shift(2))
@@ -691,7 +687,7 @@ class indicators:
         >>> import pandas as pd
         >>> import rhoa
         >>> prices = pd.Series([100, 102, 101, 103, 105, 104, 106, 108, 107])
-        >>> bb = prices.indicators.bollinger_bands(window_size=5, num_std=2.0)
+        >>> bb = prices.rhoa.indicators.bollinger_bands(window_size=5, num_std=2.0)
         >>> # Band width indicates volatility
         >>> width = bb['upper_band'] - bb['lower_band']
         >>> squeeze = width < width.rolling(10).mean() * 0.8  # Low volatility
@@ -700,7 +696,7 @@ class indicators:
 
         Calculate %B indicator for position within bands:
 
-        >>> bb = prices.indicators.bollinger_bands()
+        >>> bb = prices.rhoa.indicators.bollinger_bands()
         >>> percent_b = (prices - bb['lower_band']) / (bb['upper_band'] - bb['lower_band'])
         >>> overbought = percent_b > 1.0  # Price above upper band
         >>> oversold = percent_b < 0.0    # Price below lower band
@@ -810,7 +806,7 @@ class indicators:
         >>> close = pd.Series([100, 102, 101, 103, 105, 104, 106])
         >>> high = pd.Series([101, 103, 102, 104, 106, 105, 107])
         >>> low = pd.Series([99, 101, 100, 102, 104, 103, 105])
-        >>> atr = close.indicators.atr(high, low, window_size=5)
+        >>> atr = close.rhoa.indicators.atr(high, low, window_size=5)
         >>> # Use ATR for stop-loss: 2 * ATR below entry
         >>> stop_distance = 2 * atr.iloc[-1]
         >>> print(f"ATR: {atr.iloc[-1]:.2f}, Stop distance: {stop_distance:.2f}")
@@ -821,7 +817,7 @@ class indicators:
         >>> close = pd.Series([100, 105, 110, 108, 112, 115])
         >>> high = pd.Series([102, 107, 112, 110, 114, 117])
         >>> low = pd.Series([98, 103, 108, 106, 110, 113])
-        >>> atr = close.indicators.atr(high, low, window_size=5)
+        >>> atr = close.rhoa.indicators.atr(high, low, window_size=5)
         >>> risk_per_trade = 1000  # Fixed dollar risk
         >>> shares = risk_per_trade / (2 * atr)  # Position size
         """
@@ -928,7 +924,7 @@ class indicators:
         >>> close = pd.Series([100, 102, 101, 103, 105, 104, 106, 108, 107])
         >>> high = pd.Series([101, 103, 102, 104, 106, 105, 107, 109, 108])
         >>> low = pd.Series([99, 101, 100, 102, 104, 103, 105, 107, 106])
-        >>> cci = close.indicators.cci(high, low, window_size=5)
+        >>> cci = close.rhoa.indicators.cci(high, low, window_size=5)
         >>> overbought = cci > 100   # Potential sell signals
         >>> oversold = cci < -100    # Potential buy signals
         >>> print(f"Latest CCI: {cci.iloc[-1]:.1f}")
@@ -936,7 +932,7 @@ class indicators:
 
         Use CCI for trend-following strategy:
 
-        >>> cci = close.indicators.cci(high, low, window_size=20)
+        >>> cci = close.rhoa.indicators.cci(high, low, window_size=20)
         >>> bullish_trend = cci > 0
         >>> strong_bullish = cci > 100
         >>> zero_cross_up = (cci > 0) & (cci.shift(1) <= 0)
@@ -1056,7 +1052,7 @@ class indicators:
         >>> close = pd.Series([100, 102, 101, 103, 105, 104, 106, 108, 107])
         >>> high = pd.Series([101, 103, 102, 104, 106, 105, 107, 109, 108])
         >>> low = pd.Series([99, 101, 100, 102, 104, 103, 105, 107, 106])
-        >>> stoch = close.indicators.stochastic(high, low, k_window=5, d_window=3)
+        >>> stoch = close.rhoa.indicators.stochastic(high, low, k_window=5, d_window=3)
         >>> overbought = stoch['%K'] > 80  # Potential sell signals
         >>> oversold = stoch['%K'] < 20   # Potential buy signals
         >>> print(f"%K: {stoch['%K'].iloc[-1]:.1f}, %D: {stoch['%D'].iloc[-1]:.1f}")
@@ -1064,7 +1060,7 @@ class indicators:
 
         Identify bullish and bearish crossovers:
 
-        >>> stoch = close.indicators.stochastic(high, low)
+        >>> stoch = close.rhoa.indicators.stochastic(high, low)
         >>> bullish_cross = (stoch['%K'] > stoch['%D']) & (stoch['%K'].shift(1) <= stoch['%D'].shift(1))
         >>> bearish_cross = (stoch['%K'] < stoch['%D']) & (stoch['%K'].shift(1) >= stoch['%D'].shift(1))
         """
@@ -1179,7 +1175,7 @@ class indicators:
         >>> close = pd.Series([100, 102, 101, 103, 105, 104, 106, 108, 107])
         >>> high = pd.Series([101, 103, 102, 104, 106, 105, 107, 109, 108])
         >>> low = pd.Series([99, 101, 100, 102, 104, 103, 105, 107, 106])
-        >>> wr = close.indicators.williams_r(high, low, window_size=5)
+        >>> wr = close.rhoa.indicators.williams_r(high, low, window_size=5)
         >>> overbought = wr > -20  # Potential sell signals
         >>> oversold = wr < -80   # Potential buy signals
         >>> print(f"Williams %R: {wr.iloc[-1]:.1f}")
@@ -1187,7 +1183,7 @@ class indicators:
 
         Detect bullish divergence for reversal signals:
 
-        >>> wr = close.indicators.williams_r(high, low, window_size=14)
+        >>> wr = close.rhoa.indicators.williams_r(high, low, window_size=14)
         >>> price_lower_low = close < close.shift(5).rolling(5).min()
         >>> wr_higher_low = wr > wr.shift(5).rolling(5).min()
         >>> bullish_divergence = price_lower_low & wr_higher_low
@@ -1314,7 +1310,7 @@ class indicators:
         >>> close = pd.Series([100, 102, 104, 106, 108, 110, 112, 114, 116])
         >>> high = pd.Series([101, 103, 105, 107, 109, 111, 113, 115, 117])
         >>> low = pd.Series([99, 101, 103, 105, 107, 109, 111, 113, 115])
-        >>> adx_data = close.indicators.adx(high, low, window_size=5)
+        >>> adx_data = close.rhoa.indicators.adx(high, low, window_size=5)
         >>> strong_trend = adx_data['ADX'] > 25  # Strong trend identification
         >>> bullish = adx_data['+DI'] > adx_data['-DI']  # Uptrend
         >>> print(f"ADX: {adx_data['ADX'].iloc[-1]:.1f}")
@@ -1322,7 +1318,7 @@ class indicators:
 
         Use ADX for strategy selection:
 
-        >>> adx_data = close.indicators.adx(high, low, window_size=14)
+        >>> adx_data = close.rhoa.indicators.adx(high, low, window_size=14)
         >>> trending_market = adx_data['ADX'] > 25
         >>> ranging_market = adx_data['ADX'] < 20
         >>> bullish_trend = trending_market & (adx_data['+DI'] > adx_data['-DI'])
@@ -1472,7 +1468,7 @@ class indicators:
         >>> close = pd.Series([100, 102, 104, 103, 105, 107, 106, 108, 110])
         >>> high = pd.Series([101, 103, 105, 104, 106, 108, 107, 109, 111])
         >>> low = pd.Series([99, 101, 103, 102, 104, 106, 105, 107, 109])
-        >>> sar = close.indicators.parabolic_sar(high, low)
+        >>> sar = close.rhoa.indicators.parabolic_sar(high, low)
         >>> uptrend = close > sar    # Price above SAR = uptrend
         >>> downtrend = close < sar  # Price below SAR = downtrend
         >>> print(f"Latest SAR: {sar.iloc[-1]:.2f}")
@@ -1480,15 +1476,15 @@ class indicators:
 
         Use SAR as trailing stop-loss:
 
-        >>> sar = close.indicators.parabolic_sar(high, low)
+        >>> sar = close.rhoa.indicators.parabolic_sar(high, low)
         >>> position = (close > sar).astype(int) - (close < sar).astype(int)
         >>> # position: 1 = long, -1 = short, 0 = neutral
         >>> stop_loss = sar  # Use SAR as stop level
 
         Combine SAR with ADX for better signals:
 
-        >>> sar = close.indicators.parabolic_sar(high, low)
-        >>> adx_data = close.indicators.adx(high, low)
+        >>> sar = close.rhoa.indicators.parabolic_sar(high, low)
+        >>> adx_data = close.rhoa.indicators.adx(high, low)
         >>> strong_trend = adx_data['ADX'] > 25
         >>> long_signal = (close > sar) & strong_trend
         >>> short_signal = (close < sar) & strong_trend
