@@ -90,6 +90,11 @@ class indicators:
         - Generating crossover trading signals (e.g., golden cross, death cross)
         - Smoothing price data for trend identification
 
+        .. tip::
+            Also available via DataFrame accessor:
+            ``df.rhoa.indicators.sma(window_size=20)`` which defaults to the
+            Close column. See :class:`DataFrameIndicators`.
+
         Examples
         --------
         Calculate 20-period Simple Moving Average:
@@ -175,6 +180,11 @@ class indicators:
         - Support and resistance levels that adapt to volatility
         - Component of MACD and other composite indicators
 
+        .. tip::
+            Also available via DataFrame accessor:
+            ``df.rhoa.indicators.ewma(window_size=20)`` which defaults to the
+            Close column. See :class:`DataFrameIndicators`.
+
         Examples
         --------
         Calculate 20-period Exponential Weighted Moving Average:
@@ -255,6 +265,11 @@ class indicators:
         - Detecting regime changes in market conditions
         - Building adaptive trading strategies
         - Calculating value-at-risk (VaR) metrics
+
+        .. tip::
+            Also available via DataFrame accessor:
+            ``df.rhoa.indicators.ewmv(window_size=20)`` which defaults to the
+            Close column. See :class:`DataFrameIndicators`.
 
         Examples
         --------
@@ -341,6 +356,11 @@ class indicators:
         - Normalized price movements (z-scores)
 
         Higher values indicate increased volatility and uncertainty.
+
+        .. tip::
+            Also available via DataFrame accessor:
+            ``df.rhoa.indicators.ewmstd(window_size=20)`` which defaults to the
+            Close column. See :class:`DataFrameIndicators`.
 
         Examples
         --------
@@ -433,6 +453,11 @@ class indicators:
         ----------
         .. [1] Wilder, J. W. (1978). New Concepts in Technical Trading Systems.
                Trend Research.
+
+        .. tip::
+            Also available via DataFrame accessor:
+            ``df.rhoa.indicators.rsi(window_size=14)`` which defaults to the
+            Close column. See :class:`DataFrameIndicators`.
 
         Examples
         --------
@@ -552,6 +577,11 @@ class indicators:
         ----------
         .. [1] Appel, Gerald (2005). Technical Analysis: Power Tools for Active
                Investors. Financial Times Prentice Hall.
+
+        .. tip::
+            Also available via DataFrame accessor:
+            ``df.rhoa.indicators.macd()`` which defaults to the
+            Close column. See :class:`DataFrameIndicators`.
 
         Examples
         --------
@@ -680,6 +710,11 @@ class indicators:
         .. [1] Bollinger, John (2001). Bollinger on Bollinger Bands.
                McGraw-Hill.
 
+        .. tip::
+            Also available via DataFrame accessor:
+            ``df.rhoa.indicators.bollinger_bands(window_size=20)`` which defaults to the
+            Close column. See :class:`DataFrameIndicators`.
+
         Examples
         --------
         Calculate Bollinger Bands and identify squeeze conditions:
@@ -796,6 +831,11 @@ class indicators:
         ----------
         .. [1] Wilder, J. W. (1978). New Concepts in Technical Trading Systems.
                Trend Research.
+
+        .. tip::
+            For a simpler API, use the DataFrame accessor:
+            ``df.rhoa.indicators.atr(window_size=14)`` which auto-detects
+            OHLC columns. See :class:`DataFrameIndicators`.
 
         Examples
         --------
@@ -914,6 +954,11 @@ class indicators:
         ----------
         .. [1] Lambert, Donald R. (1980). "Commodity Channel Index: Tools for
                Trading Cyclic Trends." Commodities Magazine.
+
+        .. tip::
+            For a simpler API, use the DataFrame accessor:
+            ``df.rhoa.indicators.cci(window_size=20)`` which auto-detects
+            OHLC columns. See :class:`DataFrameIndicators`.
 
         Examples
         --------
@@ -1043,6 +1088,11 @@ class indicators:
         .. [1] Lane, George C. (1984). "Lane's Stochastics." Technical Analysis
                of Stocks and Commodities Magazine.
 
+        .. tip::
+            For a simpler API, use the DataFrame accessor:
+            ``df.rhoa.indicators.stochastic(k_window=14, d_window=3)`` which auto-detects
+            OHLC columns. See :class:`DataFrameIndicators`.
+
         Examples
         --------
         Calculate Stochastic Oscillator and identify signals:
@@ -1165,6 +1215,11 @@ class indicators:
         ----------
         .. [1] Williams, Larry (1979). How I Made One Million Dollars Last Year
                Trading Commodities. Windsor Books.
+
+        .. tip::
+            For a simpler API, use the DataFrame accessor:
+            ``df.rhoa.indicators.williams_r(window_size=14)`` which auto-detects
+            OHLC columns. See :class:`DataFrameIndicators`.
 
         Examples
         --------
@@ -1300,6 +1355,11 @@ class indicators:
         ----------
         .. [1] Wilder, J. W. (1978). New Concepts in Technical Trading Systems.
                Trend Research.
+
+        .. tip::
+            For a simpler API, use the DataFrame accessor:
+            ``df.rhoa.indicators.adx(window_size=14)`` which auto-detects
+            OHLC columns. See :class:`DataFrameIndicators`.
 
         Examples
         --------
@@ -1458,6 +1518,11 @@ class indicators:
         ----------
         .. [1] Wilder, J. W. (1978). New Concepts in Technical Trading Systems.
                Trend Research.
+
+        .. tip::
+            For a simpler API, use the DataFrame accessor:
+            ``df.rhoa.indicators.parabolic_sar()`` which auto-detects
+            OHLC columns. See :class:`DataFrameIndicators`.
 
         Examples
         --------

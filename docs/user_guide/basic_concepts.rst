@@ -16,7 +16,7 @@ How Accessors Work
    import pandas as pd
    import rhoa  # This registers the accessors
 
-   # Now Series objects have .indicators accessor
+   # Now DataFrame and Series objects have .indicators accessor
    prices = pd.Series([100, 102, 105, 103, 107])
    sma = prices.rhoa.indicators.sma(window_size=3)
 
@@ -65,15 +65,15 @@ Indicator Properties
 
    .. code-block:: python
 
-      sma_20 = prices.rhoa.indicators.sma(window_size=20)  # Slower, smoother
-      sma_5 = prices.rhoa.indicators.sma(window_size=5)    # Faster, noisier
+      sma_20 = df.rhoa.indicators.sma(window_size=20)  # Slower, smoother
+      sma_5 = df.rhoa.indicators.sma(window_size=5)    # Faster, noisier
 
 **NaN Values**
    Indicators create NaN for initial periods where insufficient data exists.
 
    .. code-block:: python
 
-      sma_10 = prices.rhoa.indicators.sma(window_size=10)
+      sma_10 = df.rhoa.indicators.sma(window_size=10)
       # First 9 values will be NaN
 
 **Lagging vs. Leading**
@@ -106,7 +106,7 @@ Stationarity
    returns = df['Close'].pct_change()
 
    # Stationary indicator
-   rsi = df['Close'].rhoa.indicators.rsi(14)
+   rsi = df.rhoa.indicators.rsi(14)
 
 Autocorrelation
 ~~~~~~~~~~~~~~~

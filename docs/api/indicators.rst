@@ -6,12 +6,20 @@ rhoa.indicators module
    :undoc-members:
    :show-inheritance:
 
-The indicators module provides technical analysis indicators through pandas Series accessor.
+The indicators module provides technical analysis indicators through pandas DataFrame and Series accessors.
 
 indicators Class
 ----------------
 
 .. autoclass:: rhoa.indicators.indicators
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+DataFrameIndicators Class
+--------------------------
+
+.. autoclass:: rhoa.indicators.DataFrameIndicators
    :members:
    :undoc-members:
    :show-inheritance:

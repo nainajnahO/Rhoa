@@ -8,7 +8,7 @@ Overview
 
 Rhoa provides pandas DataFrame extension accessors for:
 
-- **Technical indicators** via ``.indicators`` accessor on pandas Series
+- **Technical indicators** via ``.indicators`` accessor on pandas DataFrame and Series
 - **ML target generation** via the ``generate_target_combinations()`` function
 - **Visualization** via ``.plots`` accessor on pandas DataFrame
 
@@ -38,13 +38,13 @@ Basic Example
    df = pd.read_csv('stock_prices.csv')
 
    # Calculate Simple Moving Average
-   df['SMA_20'] = df['Close'].rhoa.indicators.sma(window_size=20)
+   df['SMA_20'] = df.rhoa.indicators.sma(window_size=20)
 
    # Calculate RSI (Relative Strength Index)
-   df['RSI_14'] = df['Close'].rhoa.indicators.rsi(window_size=14)
+   df['RSI_14'] = df.rhoa.indicators.rsi(window_size=14)
 
    # Calculate Exponential Moving Average
-   df['EMA_12'] = df['Close'].rhoa.indicators.ewma(span=12)
+   df['EMA_12'] = df.rhoa.indicators.ewma(span=12)
 
    print(df[['Close', 'SMA_20', 'RSI_14', 'EMA_12']].tail())
 
@@ -56,19 +56,10 @@ For indicators that require High, Low, and Close prices:
 .. code-block:: python
 
    # Calculate Average True Range
-   df['ATR_14'] = df['Close'].rhoa.indicators.atr(
-       high=df['High'],
-       low=df['Low'],
-       window_size=14
-   )
+   df['ATR_14'] = df.rhoa.indicators.atr(window_size=14)
 
    # Calculate Stochastic Oscillator
-   stoch = df['Close'].rhoa.indicators.stochastic(
-       high=df['High'],
-       low=df['Low'],
-       k_window=14,
-       d_window=3
-   )
+   stoch = df.rhoa.indicators.stochastic(k_window=14, d_window=3)
    df['Stoch_K'] = stoch['%K']
    df['Stoch_D'] = stoch['%D']
 
@@ -78,22 +69,19 @@ Multiple Indicators at Once
 .. code-block:: python
 
    # Calculate multiple indicators
-   close = df['Close']
-   high = df['High']
-   low = df['Low']
 
    # Build comprehensive technical analysis DataFrame
-   df['SMA_50'] = close.rhoa.indicators.sma(50)
-   df['SMA_200'] = close.rhoa.indicators.sma(200)
-   df['RSI'] = close.rhoa.indicators.rsi(14)
-   df['ATR'] = close.rhoa.indicators.atr(high, low, 14)
+   df['SMA_50'] = df.rhoa.indicators.sma(50)
+   df['SMA_200'] = df.rhoa.indicators.sma(200)
+   df['RSI'] = df.rhoa.indicators.rsi(14)
+   df['ATR'] = df.rhoa.indicators.atr(window_size=14)
 
-   macd = close.rhoa.indicators.macd()
+   macd = df.rhoa.indicators.macd()
    df['MACD'] = macd['macd']
    df['MACD_Signal'] = macd['signal']
    df['MACD_Hist'] = macd['histogram']
 
-   bb = close.rhoa.indicators.bollinger_bands(window_size=20)
+   bb = df.rhoa.indicators.bollinger_bands(window_size=20)
    df['BB_Upper'] = bb['upper_band']
    df['BB_Middle'] = bb['middle_band']
    df['BB_Lower'] = bb['lower_band']
@@ -169,15 +157,11 @@ Here's a complete example combining features and targets:
    df = pd.read_csv('stock_prices.csv')
 
    # Step 2: Generate technical indicator features
-   close = df['Close']
-   high = df['High']
-   low = df['Low']
-
-   df['SMA_20'] = close.rhoa.indicators.sma(20)
-   df['SMA_50'] = close.rhoa.indicators.sma(50)
-   df['RSI_14'] = close.rhoa.indicators.rsi(14)
-   df['ATR_14'] = close.rhoa.indicators.atr(high, low, 14)
-   df['Returns'] = close.pct_change()
+   df['SMA_20'] = df.rhoa.indicators.sma(20)
+   df['SMA_50'] = df.rhoa.indicators.sma(50)
+   df['RSI_14'] = df.rhoa.indicators.rsi(14)
+   df['ATR_14'] = df.rhoa.indicators.atr(window_size=14)
+   df['Returns'] = df['Close'].pct_change()
 
    # Step 3: Generate optimized targets
    targets, meta = generate_target_combinations(
@@ -249,7 +233,7 @@ Find Overbought/Oversold Conditions
 .. code-block:: python
 
    # Calculate RSI
-   rsi = df['Close'].rhoa.indicators.rsi(14)
+   rsi = df.rhoa.indicators.rsi(14)
 
    # Find overbought (RSI > 70)
    overbought = df[rsi > 70]
@@ -265,8 +249,8 @@ Detect Moving Average Crossovers
 .. code-block:: python
 
    # Calculate moving averages
-   sma_50 = df['Close'].rhoa.indicators.sma(50)
-   sma_200 = df['Close'].rhoa.indicators.sma(200)
+   sma_50 = df.rhoa.indicators.sma(50)
+   sma_200 = df.rhoa.indicators.sma(200)
 
    # Detect golden cross (50 crosses above 200)
    golden_cross = (sma_50 > sma_200) & (sma_50.shift(1) <= sma_200.shift(1))
@@ -283,7 +267,7 @@ Identify MACD Signals
 .. code-block:: python
 
    # Calculate MACD
-   macd_data = df['Close'].rhoa.indicators.macd()
+   macd_data = df.rhoa.indicators.macd()
    macd = macd_data['macd']
    signal = macd_data['signal']
 
@@ -302,7 +286,7 @@ Check Bollinger Band Breakouts
 .. code-block:: python
 
    # Calculate Bollinger Bands
-   bb = df['Close'].rhoa.indicators.bollinger_bands(window_size=20, num_std=2.0)
+   bb = df.rhoa.indicators.bollinger_bands(window_size=20, num_std=2.0)
 
    # Price touching upper band (potential reversal)
    upper_touch = df['Close'] >= bb['upper_band']

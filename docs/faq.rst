@@ -69,7 +69,7 @@ Why can't I import rhoa?
 Why doesn't the .indicators accessor work?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Issue**: ``AttributeError: 'Series' object has no attribute 'indicators'``
+**Issue**: ``AttributeError: 'Series'/'DataFrame' object has no attribute 'indicators'``
 
 **Solution**: You must import rhoa to register the accessor:
 
@@ -238,8 +238,8 @@ Can I use indicators with intraday data?
    df_5min = pd.read_csv('intraday_5min.csv')
 
    # Calculate indicators (adjust window sizes for timeframe)
-   df_5min['SMA_20'] = df_5min['Close'].rhoa.indicators.sma(20)  # 100 minutes
-   df_5min['RSI'] = df_5min['Close'].rhoa.indicators.rsi(14)     # 70 minutes
+   df_5min['SMA_20'] = df_5min.rhoa.indicators.sma(20)  # 100 minutes
+   df_5min['RSI'] = df_5min.rhoa.indicators.rsi(14)     # 70 minutes
 
 **Parameter adjustment**:
 
@@ -253,20 +253,16 @@ How do I combine multiple indicators?
 .. code-block:: python
 
    # Calculate multiple indicators
-   close = df['Close']
-   high = df['High']
-   low = df['Low']
-
    # Trend
-   sma_50 = close.rhoa.indicators.sma(50)
-   sma_200 = close.rhoa.indicators.sma(200)
+   sma_50 = df.rhoa.indicators.sma(50)
+   sma_200 = df.rhoa.indicators.sma(200)
 
    # Momentum
-   rsi = close.rhoa.indicators.rsi(14)
-   macd_data = close.rhoa.indicators.macd()
+   rsi = df.rhoa.indicators.rsi(14)
+   macd_data = df.rhoa.indicators.macd()
 
    # Volatility
-   atr = close.rhoa.indicators.atr(high, low, 14)
+   atr = df.rhoa.indicators.atr(window_size=14)
 
    # Store in DataFrame
    df['SMA_50'] = sma_50
@@ -276,7 +272,7 @@ How do I combine multiple indicators?
    df['ATR'] = atr
 
    # Combine conditions
-   uptrend = close > sma_50
+   uptrend = df['Close'] > sma_50
    strong_trend = sma_50 > sma_200
    not_overbought = rsi < 70
    bullish_macd = macd_data['macd'] > macd_data['signal']
@@ -567,8 +563,8 @@ Can I use scikit-learn with Rhoa?
    from sklearn.model_selection import train_test_split
 
    # Create features using Rhoa
-   df['SMA_20'] = df['Close'].rhoa.indicators.sma(20)
-   df['RSI'] = df['Close'].rhoa.indicators.rsi(14)
+   df['SMA_20'] = df.rhoa.indicators.sma(20)
+   df['RSI'] = df.rhoa.indicators.rsi(14)
 
    # Create targets using Rhoa
    from rhoa.targets import generate_target_combinations
@@ -714,13 +710,13 @@ Rhoa uses pandas and numpy, which are optimized for large datasets. However:
 .. code-block:: python
 
    # Indicators are fast - they use vectorized pandas operations
-   %timeit prices.rhoa.indicators.sma(20)
+   %timeit df.rhoa.indicators.sma(20)
    # ~1ms for 100k rows
 
    # Pre-calculate and store if using repeatedly
-   df['SMA_20'] = df['Close'].rhoa.indicators.sma(20)  # Calculate once
+   df['SMA_20'] = df.rhoa.indicators.sma(20)  # Calculate once
    # Rather than
-   # sma = df['Close'].rhoa.indicators.sma(20)  # Every time
+   # sma = df.rhoa.indicators.sma(20)  # Every time
 
 **For target generation**:
 
@@ -756,9 +752,9 @@ How do I optimize indicator calculations?
 .. code-block:: python
 
    # Calculate all indicators at once
-   df['SMA_20'] = df['Close'].rhoa.indicators.sma(20)
-   df['SMA_50'] = df['Close'].rhoa.indicators.sma(50)
-   df['RSI'] = df['Close'].rhoa.indicators.rsi(14)
+   df['SMA_20'] = df.rhoa.indicators.sma(20)
+   df['SMA_50'] = df.rhoa.indicators.sma(50)
+   df['RSI'] = df.rhoa.indicators.rsi(14)
 
    # Store in DataFrame
    df.to_pickle('data_with_indicators.pkl')
@@ -782,11 +778,11 @@ How do I optimize indicator calculations?
 
    # SLOW - recalculates every time
    for i in range(100):
-       sma = df['Close'].rhoa.indicators.sma(20)
+       sma = df.rhoa.indicators.sma(20)
        # Use sma
 
    # FAST - calculate once
-   sma = df['Close'].rhoa.indicators.sma(20)
+   sma = df.rhoa.indicators.sma(20)
    for i in range(100):
        # Use sma
 
@@ -956,7 +952,7 @@ Error Messages
    df.columns = ['Date', 'Open', 'High', 'Low', 'Close']
 
    # Option 2: Use lowercase
-   sma = df['close'].rhoa.indicators.sma(20)
+   sma = df.rhoa.indicators.sma(20)
 
    # Option 3: Specify in function call
    targets, meta = generate_target_combinations(
@@ -992,7 +988,7 @@ How do I report a bug?
       df = pd.DataFrame({
           'Close': [100, 102, 104, 106, 108]
       })
-      result = df['Close'].rhoa.indicators.sma(20)  # Bug occurs here
+      result = df.rhoa.indicators.sma(20)  # Bug occurs here
       print(result)
 
 3. **Include**:

@@ -510,7 +510,7 @@ Complete Workflow
    # 2. Create features
    df['SMA_20'] = df['Close'].rolling(20).mean()
    df['SMA_50'] = df['Close'].rolling(50).mean()
-   df['RSI'] = df['Close'].rhoa.indicators.rsi(14)
+   df['RSI'] = df.rhoa.indicators.rsi(14)
    df['Returns'] = df['Close'].pct_change()
 
    # 3. Create target

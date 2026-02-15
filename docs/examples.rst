@@ -16,10 +16,9 @@ Calculate a 20-period Simple Moving Average:
 
    # Load your price data
    df = pd.read_csv('your_data.csv')
-   prices = df['close']
-   
+
    # Calculate 20-period SMA
-   sma_20 = prices.rhoa.indicators.sma(window_size=20)
+   sma_20 = df.rhoa.indicators.sma(window_size=20)
    print(sma_20.head())
 
 RSI (Relative Strength Index)
@@ -30,7 +29,7 @@ Calculate the RSI indicator:
 .. code-block:: python
 
    # Calculate 14-period RSI
-   rsi = prices.rhoa.indicators.rsi(window_size=14)
+   rsi = df.rhoa.indicators.rsi(window_size=14)
    
    # Find overbought conditions (RSI > 70)
    overbought = rsi > 70
@@ -44,7 +43,7 @@ Calculate MACD with custom parameters:
 .. code-block:: python
 
    # Calculate MACD with default parameters (12, 26, 9)
-   macd_data = prices.rhoa.indicators.macd()
+   macd_data = df.rhoa.indicators.macd()
    
    # Access individual components
    macd_line = macd_data['macd']
@@ -62,13 +61,13 @@ Calculate Bollinger Bands:
 .. code-block:: python
 
    # Calculate Bollinger Bands (20-period, 2 standard deviations)
-   bb = prices.rhoa.indicators.bollinger_bands(window_size=20, num_std=2.0)
-   
+   bb = df.rhoa.indicators.bollinger_bands(window_size=20, num_std=2.0)
+
    # Check for price touching upper band
-   touching_upper = prices >= bb['upper_band']
-   
-   # Check for price touching lower band  
-   touching_lower = prices <= bb['lower_band']
+   touching_upper = df['close'] >= bb['upper_band']
+
+   # Check for price touching lower band
+   touching_lower = df['close'] <= bb['lower_band']
 
 Multiple Indicators
 ~~~~~~~~~~~~~~~~~~~
@@ -78,13 +77,13 @@ Combine multiple indicators for analysis:
 .. code-block:: python
 
    # Calculate multiple indicators
-   sma_50 = prices.rhoa.indicators.sma(window_size=50)
-   rsi_14 = prices.rhoa.indicators.rsi(window_size=14)
-   bb = prices.rhoa.indicators.bollinger_bands()
-   
+   sma_50 = df.rhoa.indicators.sma(window_size=50)
+   rsi_14 = df.rhoa.indicators.rsi(window_size=14)
+   bb = df.rhoa.indicators.bollinger_bands()
+
    # Create a comprehensive analysis DataFrame
    analysis = pd.DataFrame({
-       'price': prices,
+       'price': df['close'],
        'sma_50': sma_50,
        'rsi': rsi_14,
        'bb_upper': bb['upper_band'],
@@ -102,20 +101,17 @@ For indicators that require OHLC data:
 .. code-block:: python
 
    # Assuming you have OHLC data
-   high = df['high']
-   low = df['low'] 
-   close = df['close']
-   
+
    # Average True Range
-   atr = close.rhoa.indicators.atr(high, low, window_size=14)
-   
+   atr = df.rhoa.indicators.atr(window_size=14)
+
    # Stochastic Oscillator
-   stoch = close.rhoa.indicators.stochastic(high, low, k_window=14, d_window=3)
+   stoch = df.rhoa.indicators.stochastic(k_window=14, d_window=3)
    k_percent = stoch['%K']
    d_percent = stoch['%D']
-   
+
    # ADX (Average Directional Index)
-   adx_data = close.rhoa.indicators.adx(high, low, window_size=14)
+   adx_data = df.rhoa.indicators.adx(window_size=14)
    adx = adx_data['ADX']
    plus_di = adx_data['+DI']
    minus_di = adx_data['-DI']

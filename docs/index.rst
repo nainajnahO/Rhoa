@@ -71,8 +71,8 @@ Quick Example
    df = pd.read_csv('stock_prices.csv')
 
    # Calculate technical indicators
-   df['SMA_20'] = df['Close'].rhoa.indicators.sma(window_size=20)
-   df['RSI_14'] = df['Close'].rhoa.indicators.rsi(window_size=14)
+   df['SMA_20'] = df.rhoa.indicators.sma(window_size=20)
+   df['RSI_14'] = df.rhoa.indicators.rsi(window_size=14)
 
    # Generate ML targets
    from rhoa.targets import generate_target_combinations

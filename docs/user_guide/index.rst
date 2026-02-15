@@ -73,7 +73,7 @@ Module Organization
 Rhoa is organized into focused modules:
 
 **indicators**
-   Technical analysis indicators accessible via ``.indicators`` accessor on pandas Series.
+   Technical analysis indicators accessible via ``.indicators`` accessor on pandas DataFrame and Series.
    Includes trend, momentum, volatility, and oscillator indicators.
 
 **targets**
@@ -153,10 +153,9 @@ Common Patterns
    .. code-block:: python
 
       # Calculate multiple indicators
-      close = df['Close']
-      df['SMA_50'] = close.rhoa.indicators.sma(50)
-      df['RSI'] = close.rhoa.indicators.rsi(14)
-      macd = close.rhoa.indicators.macd()
+      df['SMA_50'] = df.rhoa.indicators.sma(50)
+      df['RSI'] = df.rhoa.indicators.rsi(14)
+      macd = df.rhoa.indicators.macd()
       df['MACD'] = macd['macd']
 
 **Feature Engineering**
@@ -164,9 +163,9 @@ Common Patterns
    .. code-block:: python
 
       # Create features for ML
-      df['SMA_20'] = df['Close'].rhoa.indicators.sma(20)
+      df['SMA_20'] = df.rhoa.indicators.sma(20)
       df['Returns'] = df['Close'].pct_change()
-      df['Volatility'] = df['Close'].rhoa.indicators.ewmstd(span=20)
+      df['Volatility'] = df.rhoa.indicators.ewmstd(span=20)
 
 **Target Generation**
 

@@ -27,16 +27,12 @@ Step-by-Step Pipeline
    print(f"Data shape: {df.shape}")
 
    # Step 2: Generate technical indicator features
-   close = df['Close']
-   high = df['High']
-   low = df['Low']
+   df['SMA_20'] = df.rhoa.indicators.sma(20)
+   df['SMA_50'] = df.rhoa.indicators.sma(50)
+   df['RSI_14'] = df.rhoa.indicators.rsi(14)
+   df['ATR_14'] = df.rhoa.indicators.atr(window_size=14)
 
-   df['SMA_20'] = close.rhoa.indicators.sma(20)
-   df['SMA_50'] = close.rhoa.indicators.sma(50)
-   df['RSI_14'] = close.rhoa.indicators.rsi(14)
-   df['ATR_14'] = close.rhoa.indicators.atr(high, low, 14)
-
-   macd = close.rhoa.indicators.macd()
+   macd = df.rhoa.indicators.macd()
    df['MACD'] = macd['macd']
    df['MACD_Signal'] = macd['signal']
 
@@ -104,47 +100,44 @@ Feature Engineering Pipeline
 
    def engineer_features(df):
        """Create comprehensive feature set."""
-       close = df['Close']
-       high = df['High']
-       low = df['Low']
        volume = df['Volume']
 
        # Price-based features
-       df['Returns'] = close.pct_change()
-       df['Log_Returns'] = np.log(close / close.shift(1))
+       df['Returns'] = df['Close'].pct_change()
+       df['Log_Returns'] = np.log(df['Close'] / df['Close'].shift(1))
 
        # Moving averages
-       df['SMA_10'] = close.rhoa.indicators.sma(10)
-       df['SMA_20'] = close.rhoa.indicators.sma(20)
-       df['SMA_50'] = close.rhoa.indicators.sma(50)
-       df['SMA_200'] = close.rhoa.indicators.sma(200)
+       df['SMA_10'] = df.rhoa.indicators.sma(10)
+       df['SMA_20'] = df.rhoa.indicators.sma(20)
+       df['SMA_50'] = df.rhoa.indicators.sma(50)
+       df['SMA_200'] = df.rhoa.indicators.sma(200)
 
        # MA relationships
        df['SMA_10_20_ratio'] = df['SMA_10'] / df['SMA_20']
        df['SMA_50_200_ratio'] = df['SMA_50'] / df['SMA_200']
-       df['Price_SMA20_ratio'] = close / df['SMA_20']
+       df['Price_SMA20_ratio'] = df['Close'] / df['SMA_20']
 
        # Momentum indicators
-       df['RSI_14'] = close.rhoa.indicators.rsi(14)
-       df['RSI_28'] = close.rhoa.indicators.rsi(28)
+       df['RSI_14'] = df.rhoa.indicators.rsi(14)
+       df['RSI_28'] = df.rhoa.indicators.rsi(28)
 
-       macd = close.rhoa.indicators.macd()
+       macd = df.rhoa.indicators.macd()
        df['MACD'] = macd['macd']
        df['MACD_Signal'] = macd['signal']
        df['MACD_Hist'] = macd['histogram']
 
        # Volatility
-       df['ATR_14'] = close.rhoa.indicators.atr(high, low, 14)
-       df['ATR_28'] = close.rhoa.indicators.atr(high, low, 28)
+       df['ATR_14'] = df.rhoa.indicators.atr(window_size=14)
+       df['ATR_28'] = df.rhoa.indicators.atr(window_size=28)
 
-       bb = close.rhoa.indicators.bollinger_bands(20, 2.0)
+       bb = df.rhoa.indicators.bollinger_bands(20, 2.0)
        df['BB_Upper'] = bb['upper_band']
        df['BB_Lower'] = bb['lower_band']
        df['BB_Width'] = (bb['upper_band'] - bb['lower_band']) / bb['middle_band']
-       df['BB_Position'] = (close - bb['lower_band']) / (bb['upper_band'] - bb['lower_band'])
+       df['BB_Position'] = (df['Close'] - bb['lower_band']) / (bb['upper_band'] - bb['lower_band'])
 
        # Trend strength
-       adx = close.rhoa.indicators.adx(high, low, 14)
+       adx = df.rhoa.indicators.adx(window_size=14)
        df['ADX'] = adx['ADX']
        df['Plus_DI'] = adx['+DI']
        df['Minus_DI'] = adx['-DI']
@@ -363,27 +356,23 @@ Pipeline Class
 
        def create_features(self, df):
            """Create feature set."""
-           close = df['Close']
-           high = df['High']
-           low = df['Low']
-
            features = df.copy()
 
            # Technical indicators
-           features['SMA_20'] = close.rhoa.indicators.sma(20)
-           features['SMA_50'] = close.rhoa.indicators.sma(50)
-           features['RSI_14'] = close.rhoa.indicators.rsi(14)
-           features['ATR_14'] = close.rhoa.indicators.atr(high, low, 14)
+           features['SMA_20'] = features.rhoa.indicators.sma(20)
+           features['SMA_50'] = features.rhoa.indicators.sma(50)
+           features['RSI_14'] = features.rhoa.indicators.rsi(14)
+           features['ATR_14'] = features.rhoa.indicators.atr(window_size=14)
 
-           macd = close.rhoa.indicators.macd()
+           macd = features.rhoa.indicators.macd()
            features['MACD'] = macd['macd']
            features['MACD_Signal'] = macd['signal']
 
-           bb = close.rhoa.indicators.bollinger_bands(20, 2.0)
+           bb = features.rhoa.indicators.bollinger_bands(20, 2.0)
            features['BB_Width'] = (bb['upper_band'] - bb['lower_band']) / bb['middle_band']
 
            # Returns
-           features['Returns'] = close.pct_change()
+           features['Returns'] = df['Close'].pct_change()
 
            return features
 
@@ -538,16 +527,12 @@ Putting it all together.
    print(f"Loaded {len(df)} records")
 
    # 2. Engineer features
-   close = df['Close']
-   high = df['High']
-   low = df['Low']
+   df['SMA_20'] = df.rhoa.indicators.sma(20)
+   df['SMA_50'] = df.rhoa.indicators.sma(50)
+   df['RSI_14'] = df.rhoa.indicators.rsi(14)
+   df['ATR_14'] = df.rhoa.indicators.atr(window_size=14)
 
-   df['SMA_20'] = close.rhoa.indicators.sma(20)
-   df['SMA_50'] = close.rhoa.indicators.sma(50)
-   df['RSI_14'] = close.rhoa.indicators.rsi(14)
-   df['ATR_14'] = close.rhoa.indicators.atr(high, low, 14)
-
-   macd = close.rhoa.indicators.macd()
+   macd = df.rhoa.indicators.macd()
    df['MACD'] = macd['macd']
    df['MACD_Signal'] = macd['signal']
 

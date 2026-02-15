@@ -1,7 +1,7 @@
 Basic Indicators
 ================
 
-This page covers basic technical indicators that work with a single price series.
+This page covers basic technical indicators using the DataFrame accessor.
 
 .. _basic-sma:
 
@@ -20,10 +20,9 @@ Basic Usage
 
    # Load your price data
    df = pd.read_csv('prices.csv')
-   prices = df['Close']
 
    # Calculate 20-period SMA
-   sma_20 = prices.rhoa.indicators.sma(window_size=20)
+   sma_20 = df.rhoa.indicators.sma(window_size=20)
    print(sma_20.head())
 
 Multiple SMAs
@@ -34,9 +33,9 @@ Calculate multiple moving averages to identify trends:
 .. code-block:: python
 
    # Calculate short, medium, and long-term SMAs
-   df['SMA_20'] = df['Close'].rhoa.indicators.sma(window_size=20)
-   df['SMA_50'] = df['Close'].rhoa.indicators.sma(window_size=50)
-   df['SMA_200'] = df['Close'].rhoa.indicators.sma(window_size=200)
+   df['SMA_20'] = df.rhoa.indicators.sma(window_size=20)
+   df['SMA_50'] = df.rhoa.indicators.sma(window_size=50)
+   df['SMA_200'] = df.rhoa.indicators.sma(window_size=200)
 
    # Identify trend: price above all SMAs = strong uptrend
    strong_uptrend = (
@@ -53,8 +52,8 @@ Detect when faster MA crosses slower MA:
 
 .. code-block:: python
 
-   sma_50 = df['Close'].rhoa.indicators.sma(50)
-   sma_200 = df['Close'].rhoa.indicators.sma(200)
+   sma_50 = df.rhoa.indicators.sma(50)
+   sma_200 = df.rhoa.indicators.sma(200)
 
    # Golden Cross: 50 crosses above 200 (bullish)
    golden_cross = (sma_50 > sma_200) & (sma_50.shift(1) <= sma_200.shift(1))
@@ -82,10 +81,10 @@ Basic Usage
 .. code-block:: python
 
    # Calculate 12-period EWMA
-   ema_12 = df['Close'].rhoa.indicators.ewma(span=12)
+   ema_12 = df.rhoa.indicators.ewma(span=12)
 
    # Calculate 26-period EWMA
-   ema_26 = df['Close'].rhoa.indicators.ewma(span=26)
+   ema_26 = df.rhoa.indicators.ewma(span=26)
 
    df['EMA_12'] = ema_12
    df['EMA_26'] = ema_26
@@ -95,8 +94,8 @@ EMA Crossover Strategy
 
 .. code-block:: python
 
-   ema_12 = df['Close'].rhoa.indicators.ewma(span=12)
-   ema_26 = df['Close'].rhoa.indicators.ewma(span=26)
+   ema_12 = df.rhoa.indicators.ewma(span=12)
+   ema_26 = df.rhoa.indicators.ewma(span=26)
 
    # Buy signal: fast EMA crosses above slow EMA
    buy_signal = (ema_12 > ema_26) & (ema_12.shift(1) <= ema_26.shift(1))
@@ -121,7 +120,7 @@ Basic RSI Calculation
 .. code-block:: python
 
    # Calculate 14-period RSI
-   rsi = df['Close'].rhoa.indicators.rsi(window_size=14)
+   rsi = df.rhoa.indicators.rsi(window_size=14)
    df['RSI_14'] = rsi
 
    print(f"RSI range: {rsi.min():.2f} to {rsi.max():.2f}")
@@ -131,7 +130,7 @@ Find Overbought/Oversold
 
 .. code-block:: python
 
-   rsi = df['Close'].rhoa.indicators.rsi(window_size=14)
+   rsi = df.rhoa.indicators.rsi(window_size=14)
 
    # Traditional thresholds
    overbought = rsi > 70
@@ -152,7 +151,7 @@ Detect when price and RSI diverge (advanced pattern):
 .. code-block:: python
 
    # Calculate RSI
-   rsi = df['Close'].rhoa.indicators.rsi(14)
+   rsi = df.rhoa.indicators.rsi(14)
 
    # Find local peaks in price and RSI
    price_peaks = df['Close'].rolling(5).max() == df['Close']
@@ -174,7 +173,7 @@ Volatility Calculation
 .. code-block:: python
 
    # Calculate exponentially weighted moving standard deviation
-   vol = df['Close'].rhoa.indicators.ewmstd(span=20)
+   vol = df.rhoa.indicators.ewmstd(span=20)
    df['Volatility'] = vol
 
    # High volatility periods
@@ -190,7 +189,7 @@ Relative Volatility
    returns = df['Close'].pct_change()
 
    # Calculate rolling volatility
-   vol_20 = df['Close'].rhoa.indicators.ewmstd(span=20)
+   vol_20 = df.rhoa.indicators.ewmstd(span=20)
 
    # Normalize by average volatility
    avg_vol = vol_20.mean()
@@ -211,11 +210,7 @@ Basic Calculation
 .. code-block:: python
 
    # Calculate Williams %R
-   williams_r = df['Close'].rhoa.indicators.williams_r(
-       high=df['High'],
-       low=df['Low'],
-       window_size=14
-   )
+   williams_r = df.rhoa.indicators.williams_r(window_size=14)
    df['Williams_R'] = williams_r
 
    # Overbought: above -20
@@ -234,12 +229,10 @@ Multi-Indicator Analysis
 .. code-block:: python
 
    # Calculate multiple indicators
-   prices = df['Close']
-
-   df['SMA_50'] = prices.rhoa.indicators.sma(50)
-   df['RSI'] = prices.rhoa.indicators.rsi(14)
-   df['EMA_12'] = prices.rhoa.indicators.ewma(span=12)
-   df['EMA_26'] = prices.rhoa.indicators.ewma(span=26)
+   df['SMA_50'] = df.rhoa.indicators.sma(50)
+   df['RSI'] = df.rhoa.indicators.rsi(14)
+   df['EMA_12'] = df.rhoa.indicators.ewma(span=12)
+   df['EMA_26'] = df.rhoa.indicators.ewma(span=26)
 
    # Bullish conditions (all must be true)
    bullish = (
@@ -270,21 +263,19 @@ Create a comprehensive view of multiple indicators:
 
    def create_indicator_dashboard(df):
        """Create dashboard with multiple indicators."""
-       close = df['Close']
-
        # Trend indicators
-       df['SMA_20'] = close.rhoa.indicators.sma(20)
-       df['SMA_50'] = close.rhoa.indicators.sma(50)
-       df['EMA_12'] = close.rhoa.indicators.ewma(span=12)
+       df['SMA_20'] = df.rhoa.indicators.sma(20)
+       df['SMA_50'] = df.rhoa.indicators.sma(50)
+       df['EMA_12'] = df.rhoa.indicators.ewma(span=12)
 
        # Momentum indicators
-       df['RSI_14'] = close.rhoa.indicators.rsi(14)
+       df['RSI_14'] = df.rhoa.indicators.rsi(14)
 
        # Volatility
-       df['Volatility'] = close.rhoa.indicators.ewmstd(span=20)
+       df['Volatility'] = df.rhoa.indicators.ewmstd(span=20)
 
        # Summary metrics
-       trend = "Bullish" if close.iloc[-1] > df['SMA_50'].iloc[-1] else "Bearish"
+       trend = "Bullish" if df['Close'].iloc[-1] > df['SMA_50'].iloc[-1] else "Bearish"
        rsi_status = "Overbought" if df['RSI_14'].iloc[-1] > 70 else \
                     "Oversold" if df['RSI_14'].iloc[-1] < 30 else "Neutral"
 
