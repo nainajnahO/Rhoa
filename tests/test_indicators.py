@@ -595,3 +595,159 @@ class TestIndicatorsAccessor(TestCase):
         self.assertIsInstance(wr, pd.Series)
         self.assertIsInstance(adx, pd.DataFrame)
         self.assertIsInstance(sar, pd.Series)
+
+
+class TestDataFrameIndicators(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        csv_path = os.path.join(os.path.dirname(__file__), 'data.csv')
+        cls.df = pd.read_csv(csv_path)
+        cls.df['Date'] = pd.to_datetime(cls.df['Date'])
+        cls.df.set_index('Date', inplace=True)
+        cls.df_100 = cls.df.iloc[:100]
+
+    # --- Auto-detection ---
+
+    def test_single_series_auto_detect(self):
+        """All single-series indicators work with auto-detected Close."""
+        df = self.df_100
+        self.assertIsInstance(df.rhoa.indicators.sma(window_size=5), pd.Series)
+        self.assertIsInstance(df.rhoa.indicators.ewma(window_size=5), pd.Series)
+        self.assertIsInstance(df.rhoa.indicators.ewmv(window_size=5), pd.Series)
+        self.assertIsInstance(df.rhoa.indicators.ewmstd(window_size=5), pd.Series)
+        self.assertIsInstance(df.rhoa.indicators.rsi(window_size=14), pd.Series)
+        self.assertIsInstance(df.rhoa.indicators.macd(), pd.DataFrame)
+        self.assertIsInstance(df.rhoa.indicators.bollinger_bands(), pd.DataFrame)
+
+    def test_ohlc_auto_detect(self):
+        """All OHLC indicators work with auto-detected columns."""
+        df = self.df_100
+        self.assertIsInstance(df.rhoa.indicators.atr(window_size=14), pd.Series)
+        self.assertIsInstance(df.rhoa.indicators.cci(window_size=20), pd.Series)
+        self.assertIsInstance(df.rhoa.indicators.stochastic(k_window=14), pd.DataFrame)
+        self.assertIsInstance(df.rhoa.indicators.williams_r(window_size=14), pd.Series)
+        self.assertIsInstance(df.rhoa.indicators.adx(window_size=14), pd.DataFrame)
+        self.assertIsInstance(df.rhoa.indicators.parabolic_sar(), pd.Series)
+
+    # --- Case-insensitive detection ---
+
+    def test_lowercase_columns(self):
+        """Case-insensitive column detection works."""
+        df = self.df_100.copy()
+        df.columns = [c.lower() for c in df.columns]
+        result = df.rhoa.indicators.atr(window_size=14)
+        self.assertIsInstance(result, pd.Series)
+        self.assertEqual(len(result), len(df))
+
+    # --- Explicit params override ---
+
+    def test_explicit_override(self):
+        """Explicit close/high/low override auto-detection."""
+        df = self.df_100
+        custom_close = df['Close'] * 1.01
+        result_auto = df.rhoa.indicators.sma(window_size=5)
+        result_explicit = df.rhoa.indicators.sma(close=custom_close, window_size=5)
+        # They should differ since close differs
+        self.assertFalse(result_auto.equals(result_explicit))
+
+    def test_explicit_ohlc_override(self):
+        """Explicit high/low params override auto-detection for OHLC."""
+        df = self.df_100
+        custom_high = df['High'] + 1
+        custom_low = df['Low'] - 1
+        result_auto = df.rhoa.indicators.atr(window_size=14)
+        result_explicit = df.rhoa.indicators.atr(
+            high=custom_high, low=custom_low, window_size=14)
+        self.assertFalse(result_auto.equals(result_explicit))
+
+    # --- Equivalence with Series accessor ---
+
+    def test_equivalence_sma(self):
+        df = self.df_100
+        series_result = df['Close'].rhoa.indicators.sma(window_size=10)
+        df_result = df.rhoa.indicators.sma(window_size=10)
+        pd.testing.assert_series_equal(series_result, df_result, check_names=False)
+
+    def test_equivalence_ewma(self):
+        df = self.df_100
+        series_result = df['Close'].rhoa.indicators.ewma(window_size=10)
+        df_result = df.rhoa.indicators.ewma(window_size=10)
+        pd.testing.assert_series_equal(series_result, df_result, check_names=False)
+
+    def test_equivalence_rsi(self):
+        df = self.df_100
+        series_result = df['Close'].rhoa.indicators.rsi(window_size=14)
+        df_result = df.rhoa.indicators.rsi(window_size=14)
+        pd.testing.assert_series_equal(series_result, df_result, check_names=False)
+
+    def test_equivalence_macd(self):
+        df = self.df_100
+        series_result = df['Close'].rhoa.indicators.macd()
+        df_result = df.rhoa.indicators.macd()
+        pd.testing.assert_frame_equal(series_result, df_result)
+
+    def test_equivalence_bollinger_bands(self):
+        df = self.df_100
+        series_result = df['Close'].rhoa.indicators.bollinger_bands()
+        df_result = df.rhoa.indicators.bollinger_bands()
+        pd.testing.assert_frame_equal(series_result, df_result)
+
+    def test_equivalence_atr(self):
+        df = self.df_100
+        series_result = df['Close'].rhoa.indicators.atr(df['High'], df['Low'], window_size=14)
+        df_result = df.rhoa.indicators.atr(window_size=14)
+        pd.testing.assert_series_equal(series_result, df_result, check_names=False)
+
+    def test_equivalence_cci(self):
+        df = self.df_100
+        series_result = df['Close'].rhoa.indicators.cci(df['High'], df['Low'], window_size=20)
+        df_result = df.rhoa.indicators.cci(window_size=20)
+        pd.testing.assert_series_equal(series_result, df_result, check_names=False)
+
+    def test_equivalence_stochastic(self):
+        df = self.df_100
+        series_result = df['Close'].rhoa.indicators.stochastic(df['High'], df['Low'], k_window=14)
+        df_result = df.rhoa.indicators.stochastic(k_window=14)
+        pd.testing.assert_frame_equal(series_result, df_result)
+
+    def test_equivalence_williams_r(self):
+        df = self.df_100
+        series_result = df['Close'].rhoa.indicators.williams_r(df['High'], df['Low'], window_size=14)
+        df_result = df.rhoa.indicators.williams_r(window_size=14)
+        pd.testing.assert_series_equal(series_result, df_result, check_names=False)
+
+    def test_equivalence_adx(self):
+        df = self.df_100
+        series_result = df['Close'].rhoa.indicators.adx(df['High'], df['Low'], window_size=14)
+        df_result = df.rhoa.indicators.adx(window_size=14)
+        pd.testing.assert_frame_equal(series_result, df_result)
+
+    def test_equivalence_parabolic_sar(self):
+        df = self.df_100
+        series_result = df['Close'].rhoa.indicators.parabolic_sar(df['High'], df['Low'])
+        df_result = df.rhoa.indicators.parabolic_sar()
+        pd.testing.assert_series_equal(series_result, df_result, check_names=False)
+
+    # --- Error cases ---
+
+    def test_missing_column_raises(self):
+        """Missing column without explicit param raises ValueError."""
+        df = self.df_100[['Open', 'Volume']].copy()
+        with self.assertRaises(ValueError):
+            df.rhoa.indicators.sma(window_size=5)
+
+    def test_missing_high_raises(self):
+        """Missing High column raises ValueError for OHLC indicators."""
+        df = self.df_100[['Close', 'Low']].copy()
+        with self.assertRaises(ValueError):
+            df.rhoa.indicators.atr(window_size=14)
+
+    # --- Backward compat ---
+
+    def test_series_accessor_unchanged(self):
+        """Series accessor still works exactly as before."""
+        df = self.df_100
+        result = df['Close'].rhoa.indicators.atr(df['High'], df['Low'], window_size=14)
+        self.assertIsInstance(result, pd.Series)
+        self.assertEqual(len(result), len(df))

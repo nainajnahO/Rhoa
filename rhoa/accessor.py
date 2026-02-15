@@ -19,7 +19,7 @@ from pandas.api.extensions import register_dataframe_accessor, register_series_a
 from .plots import PlotsAccessor
 from .preprocess import PreprocessAccessor
 from .strategy import StrategyAccessor
-from .indicators import indicators
+from .indicators import indicators, DataFrameIndicators
 
 
 @register_dataframe_accessor("rhoa")
@@ -38,6 +38,10 @@ class RhoaDataFrameAccessor:
     @property
     def strategy(self) -> StrategyAccessor:
         return StrategyAccessor(self._df)
+
+    @property
+    def indicators(self) -> DataFrameIndicators:
+        return DataFrameIndicators(self._df)
 
 
 @register_series_accessor("rhoa")

@@ -1567,3 +1567,136 @@ class indicators:
                         sar[i] = max(sar[i], float(high.iloc[i - 2]))
 
         return pandas.Series(sar, index=close.index)
+
+
+class DataFrameIndicators:
+    """DataFrame-level indicators accessor for OHLC operations.
+
+    Auto-detects Close, High, and Low columns from the DataFrame,
+    delegating computation to the existing ``indicators`` class.
+    """
+
+    def __init__(self, df: DataFrame) -> None:
+        self._df = df
+        self._columns = {col.lower(): col for col in df.columns}
+
+    def _resolve_column(self, canonical: str) -> str:
+        """Case-insensitive column lookup.
+
+        For 'close', also checks 'adj close' as a fallback alias.
+        """
+        if canonical in self._columns:
+            return self._columns[canonical]
+        if canonical == 'close' and 'adj close' in self._columns:
+            return self._columns['adj close']
+        return None
+
+    def _get_series(self, explicit, canonical: str, param_name: str) -> Series:
+        """Return explicit Series if passed, otherwise look up from df."""
+        if explicit is not None:
+            return explicit
+        col = self._resolve_column(canonical)
+        if col is None:
+            raise ValueError(
+                f"Could not auto-detect '{canonical}' column from DataFrame. "
+                f"Pass it explicitly via the '{param_name}' parameter."
+            )
+        return self._df[col]
+
+    def _get_close_indicators(self, close=None) -> indicators:
+        """Return an indicators instance bound to the close series."""
+        close_s = self._get_series(close, 'close', 'close')
+        return indicators(close_s)
+
+    # --- Single-series indicators (delegate to Close) ---
+
+    def sma(self, close=None, window_size: int = 20, min_periods: int = None,
+            center: bool = False, **kwargs) -> Series:
+        return self._get_close_indicators(close).sma(
+            window_size=window_size, min_periods=min_periods, center=center, **kwargs)
+
+    def ewma(self, close=None, window_size: int = 20, adjust: bool = False,
+             min_periods: int = None, **kwargs) -> Series:
+        return self._get_close_indicators(close).ewma(
+            window_size=window_size, adjust=adjust, min_periods=min_periods, **kwargs)
+
+    def ewmv(self, close=None, window_size: int = 20, adjust: bool = True,
+             min_periods: int = None, **kwargs) -> Series:
+        return self._get_close_indicators(close).ewmv(
+            window_size=window_size, adjust=adjust, min_periods=min_periods, **kwargs)
+
+    def ewmstd(self, close=None, window_size: int = 20, adjust: bool = True,
+               min_periods: int = None, **kwargs) -> Series:
+        return self._get_close_indicators(close).ewmstd(
+            window_size=window_size, adjust=adjust, min_periods=min_periods, **kwargs)
+
+    def rsi(self, close=None, window_size: int = 14,
+            edge_case_value: float = 100.0, **kwargs) -> Series:
+        return self._get_close_indicators(close).rsi(
+            window_size=window_size, edge_case_value=edge_case_value, **kwargs)
+
+    def macd(self, close=None, short_window: int = 12, long_window: int = 26,
+             signal_window: int = 9, **kwargs) -> DataFrame:
+        return self._get_close_indicators(close).macd(
+            short_window=short_window, long_window=long_window,
+            signal_window=signal_window, **kwargs)
+
+    def bollinger_bands(self, close=None, window_size: int = 20,
+                        num_std: float = 2.0, min_periods: int = None,
+                        center: bool = False, **kwargs) -> DataFrame:
+        return self._get_close_indicators(close).bollinger_bands(
+            window_size=window_size, num_std=num_std, min_periods=min_periods,
+            center=center, **kwargs)
+
+    # --- OHLC indicators (auto-detect Close, High, Low) ---
+
+    def atr(self, close=None, high=None, low=None, window_size: int = 14,
+            min_periods: int = None, center: bool = False, **kwargs) -> Series:
+        high_s = self._get_series(high, 'high', 'high')
+        low_s = self._get_series(low, 'low', 'low')
+        return self._get_close_indicators(close).atr(
+            high=high_s, low=low_s, window_size=window_size,
+            min_periods=min_periods, center=center, **kwargs)
+
+    def cci(self, close=None, high=None, low=None, window_size: int = 20,
+            min_periods: int = None, center: bool = False, **kwargs) -> Series:
+        high_s = self._get_series(high, 'high', 'high')
+        low_s = self._get_series(low, 'low', 'low')
+        return self._get_close_indicators(close).cci(
+            high=high_s, low=low_s, window_size=window_size,
+            min_periods=min_periods, center=center, **kwargs)
+
+    def stochastic(self, close=None, high=None, low=None, k_window: int = 14,
+                   d_window: int = 3, min_periods: int = None,
+                   center: bool = False, **kwargs) -> DataFrame:
+        high_s = self._get_series(high, 'high', 'high')
+        low_s = self._get_series(low, 'low', 'low')
+        return self._get_close_indicators(close).stochastic(
+            high=high_s, low=low_s, k_window=k_window, d_window=d_window,
+            min_periods=min_periods, center=center, **kwargs)
+
+    def williams_r(self, close=None, high=None, low=None, window_size: int = 14,
+                   min_periods: int = None, center: bool = False,
+                   **kwargs) -> Series:
+        high_s = self._get_series(high, 'high', 'high')
+        low_s = self._get_series(low, 'low', 'low')
+        return self._get_close_indicators(close).williams_r(
+            high=high_s, low=low_s, window_size=window_size,
+            min_periods=min_periods, center=center, **kwargs)
+
+    def adx(self, close=None, high=None, low=None, window_size: int = 14,
+            min_periods: int = None, **kwargs) -> DataFrame:
+        high_s = self._get_series(high, 'high', 'high')
+        low_s = self._get_series(low, 'low', 'low')
+        return self._get_close_indicators(close).adx(
+            high=high_s, low=low_s, window_size=window_size,
+            min_periods=min_periods, **kwargs)
+
+    def parabolic_sar(self, close=None, high=None, low=None,
+                      af_start: float = 0.02, af_increment: float = 0.02,
+                      af_maximum: float = 0.2) -> Series:
+        high_s = self._get_series(high, 'high', 'high')
+        low_s = self._get_series(low, 'low', 'low')
+        return self._get_close_indicators(close).parabolic_sar(
+            high=high_s, low=low_s, af_start=af_start,
+            af_increment=af_increment, af_maximum=af_maximum)

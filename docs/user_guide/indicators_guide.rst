@@ -6,7 +6,7 @@ This comprehensive guide covers all 13 technical indicators available in Rhoa, i
 Overview
 --------
 
-Rhoa provides 13 carefully selected technical indicators accessible through the ``.indicators`` accessor on pandas Series objects. These indicators cover the four main categories:
+Rhoa provides 13 carefully selected technical indicators accessible through the ``.indicators`` accessor on both pandas DataFrame and Series objects. These indicators cover the four main categories:
 
 - **Trend Indicators**: SMA, EWMA, ADX, Parabolic SAR
 - **Momentum Indicators**: RSI, MACD, Stochastic, Williams %R
@@ -20,6 +20,44 @@ All indicators are implemented with:
 - Comprehensive documentation
 - Type hints for IDE support
 - Proper NaN handling
+
+Accessing Indicators
+--------------------
+
+Rhoa offers two ways to access indicators:
+
+**DataFrame accessor** (recommended for OHLC indicators) — auto-detects Close, High, and Low columns:
+
+.. code-block:: python
+
+   import pandas as pd
+   import rhoa
+
+   df = pd.read_csv('prices.csv')
+
+   # OHLC indicators — no need to pass columns manually
+   atr = df.rhoa.indicators.atr(window_size=14)
+   stoch = df.rhoa.indicators.stochastic(k_window=14)
+   adx_data = df.rhoa.indicators.adx(window_size=14)
+
+   # Single-series indicators default to the Close column
+   sma = df.rhoa.indicators.sma(window_size=20)
+   rsi = df.rhoa.indicators.rsi(window_size=14)
+
+   # Override auto-detection with explicit params
+   atr_custom = df.rhoa.indicators.atr(close=df['Adj Close'], window_size=14)
+
+**Series accessor** — call on a single column and pass others explicitly:
+
+.. code-block:: python
+
+   # Series-level: you choose which column to call on
+   sma = df['Close'].rhoa.indicators.sma(window_size=20)
+
+   # OHLC indicators require passing high/low explicitly
+   atr = df['Close'].rhoa.indicators.atr(df['High'], df['Low'], window_size=14)
+
+Column auto-detection is case-insensitive. For the close column, ``Adj Close`` is also checked as a fallback.
 
 Quick Reference Table
 ---------------------

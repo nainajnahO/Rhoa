@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 
 from .preprocess import PreprocessAccessor
-from .indicators import indicators
+from .indicators import indicators, DataFrameIndicators
 from .strategy import StrategyAccessor
 from .plots import PlotsAccessor
 from . import accessor
@@ -39,6 +39,8 @@ if TYPE_CHECKING:
     class DataFrame(pd.DataFrame):  # type: ignore[no-redef]
         @property
         def rhoa(self) -> RhoaDataFrameAccessor: ...
+        @property
+        def indicators(self) -> DataFrameIndicators: ...
         @overload
         def __getitem__(self, key: str) -> Series: ...
         @overload

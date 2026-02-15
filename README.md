@@ -14,7 +14,7 @@
 
 ## 🎯 Features
 
-- **📊 13 Technical Indicators** - Professional-grade indicators accessible via pandas Series extension
+- **📊 13 Technical Indicators** - Professional-grade indicators accessible via pandas DataFrame and Series extensions
   - Moving averages (SMA, EWMA)
   - Momentum oscillators (RSI, MACD, Stochastic, Williams %R, CCI)
   - Volatility indicators (ATR, Bollinger Bands, EWMSTD)
@@ -54,17 +54,22 @@ import rhoa
 # Load your price data
 df = rhoa.read_csv('stock_prices.csv')
 
-# Calculate technical indicators using Series accessor
-df['SMA_20'] = df['Close'].rhoa.indicators.sma(window_size=20)
-df['RSI_14'] = df['Close'].rhoa.indicators.rsi(window_size=14)
+# DataFrame accessor — auto-detects Close, High, Low columns
+df['SMA_20'] = df.rhoa.indicators.sma(window_size=20)
+df['RSI_14'] = df.rhoa.indicators.rsi(window_size=14)
+df['ATR_14'] = df.rhoa.indicators.atr(window_size=14)
 
-# Calculate MACD
+# OHLC indicators work without passing columns manually
+stoch = df.rhoa.indicators.stochastic(k_window=14)
+adx_data = df.rhoa.indicators.adx(window_size=14)
+
+# Series accessor still works for explicit control
 macd_data = df['Close'].rhoa.indicators.macd()
 df['MACD'] = macd_data['macd']
 df['Signal'] = macd_data['signal']
 
 # Calculate Bollinger Bands
-bb = df['Close'].rhoa.indicators.bollinger_bands(window_size=20, num_std=2.0)
+bb = df.rhoa.indicators.bollinger_bands(window_size=20, num_std=2.0)
 df['BB_Upper'] = bb['upper_band']
 df['BB_Lower'] = bb['lower_band']
 ```
@@ -154,9 +159,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 
 # Generate features
-df['SMA_20'] = df['Close'].rhoa.indicators.sma(20)
-df['RSI_14'] = df['Close'].rhoa.indicators.rsi(14)
-df['ATR_14'] = df['Close'].rhoa.indicators.atr(df['High'], df['Low'], 14)
+df['SMA_20'] = df.rhoa.indicators.sma(window_size=20)
+df['RSI_14'] = df.rhoa.indicators.rsi(window_size=14)
+df['ATR_14'] = df.rhoa.indicators.atr(window_size=14)
 
 # Generate targets
 targets, meta = generate_target_combinations(df, mode='auto')

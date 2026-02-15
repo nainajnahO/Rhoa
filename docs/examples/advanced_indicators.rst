@@ -3,6 +3,33 @@ Advanced Indicators
 
 This page covers advanced technical indicators that require OHLC (Open, High, Low, Close) data.
 
+Using the DataFrame Accessor
+-----------------------------
+
+All OHLC indicators can be called directly on a DataFrame. Rhoa auto-detects the Close, High, and Low columns:
+
+.. code-block:: python
+
+   import pandas as pd
+   import rhoa
+
+   df = pd.read_csv('prices.csv')
+
+   # DataFrame accessor — columns auto-detected
+   atr = df.rhoa.indicators.atr(window_size=14)
+   stoch = df.rhoa.indicators.stochastic(k_window=14, d_window=3)
+   cci = df.rhoa.indicators.cci(window_size=20)
+   wr = df.rhoa.indicators.williams_r(window_size=14)
+   adx_data = df.rhoa.indicators.adx(window_size=14)
+   sar = df.rhoa.indicators.parabolic_sar()
+
+   # Single-series indicators also work, defaulting to Close
+   sma = df.rhoa.indicators.sma(window_size=20)
+   rsi = df.rhoa.indicators.rsi(window_size=14)
+   macd = df.rhoa.indicators.macd()
+
+The examples below also show the Series accessor pattern for reference.
+
 .. _advanced-macd:
 
 MACD (Moving Average Convergence Divergence)
