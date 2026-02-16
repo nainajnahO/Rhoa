@@ -836,8 +836,12 @@ class DataFrameIndicators:
             min_periods: int = None, center: bool = False, **kwargs) -> Series:
         """Calculate the Average True Range (ATR) for volatility measurement.
 
-        Auto-detects Close, High, and Low columns from the DataFrame.
-        Pass explicit Series to override auto-detection.
+        ATR is a volatility indicator developed by J. Welles Wilder Jr. that
+        measures the degree of price movement by decomposing the entire range
+        of an asset for a given period. It accounts for gaps between sessions
+        by using true range rather than simple high-low range. Auto-detects
+        Close, High, and Low columns from the DataFrame. Pass explicit Series
+        to override auto-detection.
 
         Parameters
         ----------
@@ -860,6 +864,69 @@ class DataFrameIndicators:
         -------
         pandas.Series
             A Series containing the calculated ATR values.
+
+        See Also
+        --------
+        bollinger_bands : Volatility bands using standard deviation
+        ewmstd : Exponential weighted moving standard deviation
+        adx : Average Directional Index, uses ATR internally
+
+        Notes
+        -----
+        The True Range (TR) is first calculated as the greatest of:
+
+        .. math:: TR_t = \\max(H_t - L_t,\\; |H_t - C_{t-1}|,\\; |L_t - C_{t-1}|)
+
+        where :math:`H_t` is the high, :math:`L_t` is the low, and
+        :math:`C_{t-1}` is the previous close.
+
+        The ATR is then the simple moving average of the true range:
+
+        .. math:: ATR_t = \\frac{1}{n} \\sum_{i=0}^{n-1} TR_{t-i}
+
+        where n is the window_size.
+
+        Key characteristics:
+        - ATR measures volatility, not price direction
+        - Higher ATR values indicate higher volatility
+        - ATR is always positive (absolute price movement)
+        - Useful for setting stop-loss levels and position sizing
+
+        Common applications:
+        - Setting trailing stops at a multiple of ATR (e.g., 2x ATR)
+        - Position sizing: smaller positions when ATR is high
+        - Identifying breakouts: volatility expansion signals trend starts
+        - Comparing volatility across different instruments
+
+        References
+        ----------
+        .. [1] Wilder, J. W. (1978). New Concepts in Technical Trading Systems.
+               Trend Research.
+
+        Examples
+        --------
+        Calculate 14-period ATR on OHLC data:
+
+        >>> import pandas as pd
+        >>> import rhoa
+        >>> df = pd.DataFrame({
+        ...     'High':  [110, 112, 111, 113, 115],
+        ...     'Low':   [100, 102, 101, 103, 105],
+        ...     'Close': [105, 108, 106, 110, 112]
+        ... })
+        >>> atr = df.rhoa.indicators.atr(window_size=3)
+        >>> print(f"Latest ATR: {atr.iloc[-1]:.2f}")
+        Latest ATR: 10.00
+
+        Use ATR for setting stop-loss levels:
+
+        >>> df = pd.DataFrame({
+        ...     'High':  [50, 52, 51, 53, 55, 54, 56],
+        ...     'Low':   [48, 49, 48, 50, 52, 51, 53],
+        ...     'Close': [49, 51, 50, 52, 54, 53, 55]
+        ... })
+        >>> atr = df.rhoa.indicators.atr(window_size=5)
+        >>> stop_loss = df['Close'] - 2 * atr  # Trailing stop at 2x ATR
         """
         close_s = self._get_series(close, 'close', 'close')
         high_s = self._get_series(high, 'high', 'high')
@@ -877,7 +944,10 @@ class DataFrameIndicators:
             min_periods: int = None, center: bool = False, **kwargs) -> Series:
         """Calculate the Commodity Channel Index (CCI) for momentum analysis.
 
-        Auto-detects Close, High, and Low columns from the DataFrame.
+        CCI is a versatile momentum oscillator developed by Donald Lambert that
+        measures the deviation of price from its statistical mean. It is used to
+        identify cyclical trends, overbought/oversold conditions, and potential
+        reversals. Auto-detects Close, High, and Low columns from the DataFrame.
         Pass explicit Series to override auto-detection.
 
         Parameters
@@ -901,6 +971,69 @@ class DataFrameIndicators:
         -------
         pandas.Series
             A Series containing the calculated CCI values.
+
+        See Also
+        --------
+        rsi : Relative Strength Index for momentum
+        stochastic : Stochastic Oscillator for momentum
+        williams_r : Williams %R momentum indicator
+
+        Notes
+        -----
+        The Typical Price (TP) is first calculated:
+
+        .. math:: TP_t = \\frac{H_t + L_t + C_t}{3}
+
+        The CCI is then:
+
+        .. math:: CCI_t = \\frac{TP_t - SMA(TP, n)}{0.015 \\times MD_t}
+
+        where :math:`SMA(TP, n)` is the simple moving average of typical price
+        over n periods and :math:`MD_t` is the mean absolute deviation:
+
+        .. math:: MD_t = \\frac{1}{n} \\sum_{i=0}^{n-1} |TP_{t-i} - SMA(TP, n)|
+
+        The constant 0.015 is chosen so that approximately 70-80% of CCI values
+        fall between -100 and +100.
+
+        Traditional interpretation:
+        - CCI > +100: Overbought territory (potential sell signal)
+        - CCI < -100: Oversold territory (potential buy signal)
+        - CCI crossing zero: Trend direction confirmation
+
+        Common applications:
+        - Identifying new trends when CCI moves above +100 or below -100
+        - Divergence detection between CCI and price
+        - Zero-line crossovers for trend confirmation
+
+        References
+        ----------
+        .. [1] Lambert, D. (1980). Commodity Channel Index: Tool for Trading
+               Cyclical Trends. Commodities Magazine (now Futures).
+
+        Examples
+        --------
+        Calculate 20-period CCI on OHLC data:
+
+        >>> import pandas as pd
+        >>> import rhoa
+        >>> df = pd.DataFrame({
+        ...     'High':  [110, 112, 111, 113, 115, 114, 116],
+        ...     'Low':   [100, 102, 101, 103, 105, 104, 106],
+        ...     'Close': [105, 108, 106, 110, 112, 109, 113]
+        ... })
+        >>> cci = df.rhoa.indicators.cci(window_size=5)
+
+        Identify overbought and oversold conditions:
+
+        >>> df = pd.DataFrame({
+        ...     'High':  [50, 52, 54, 56, 58, 55, 53, 51, 49, 47],
+        ...     'Low':   [48, 49, 51, 53, 55, 52, 50, 48, 46, 44],
+        ...     'Close': [49, 51, 53, 55, 57, 54, 52, 50, 48, 46]
+        ... })
+        >>> cci = df.rhoa.indicators.cci(window_size=5)
+        >>> overbought = cci > 100
+        >>> oversold = cci < -100
         """
         close_s = self._get_series(close, 'close', 'close')
         high_s = self._get_series(high, 'high', 'high')
@@ -922,8 +1055,12 @@ class DataFrameIndicators:
                    center: bool = False, **kwargs) -> DataFrame:
         """Calculate the Stochastic Oscillator (%K and %D) for momentum analysis.
 
-        Auto-detects Close, High, and Low columns from the DataFrame.
-        Pass explicit Series to override auto-detection.
+        The Stochastic Oscillator is a momentum indicator developed by George Lane
+        that compares a security's closing price to its price range over a given
+        period. It is based on the observation that in an uptrend, closing prices
+        tend to close near the high, and in a downtrend, near the low. Auto-detects
+        Close, High, and Low columns from the DataFrame. Pass explicit Series to
+        override auto-detection.
 
         Parameters
         ----------
@@ -948,6 +1085,65 @@ class DataFrameIndicators:
         -------
         pandas.DataFrame
             A DataFrame with '%K' and '%D' columns.
+
+        See Also
+        --------
+        rsi : Relative Strength Index for momentum
+        williams_r : Williams %R, closely related momentum oscillator
+        cci : Commodity Channel Index for momentum
+
+        Notes
+        -----
+        The %K (fast stochastic) is calculated as:
+
+        .. math:: \\%K = 100 \\times \\frac{C_t - L_n}{H_n - L_n}
+
+        where :math:`C_t` is the current close, :math:`L_n` is the lowest low
+        over the k_window periods, and :math:`H_n` is the highest high over
+        the k_window periods.
+
+        The %D (slow stochastic / signal line) is a simple moving average of %K:
+
+        .. math:: \\%D = SMA(\\%K, d)
+
+        where d is the d_window.
+
+        Traditional interpretation:
+        - %K or %D > 80: Overbought territory (potential sell signal)
+        - %K or %D < 20: Oversold territory (potential buy signal)
+        - %K crossing above %D: Bullish signal
+        - %K crossing below %D: Bearish signal
+
+        Key characteristics:
+        - Range: 0 to 100 (bounded oscillator)
+        - %K is more sensitive and reacts faster than %D
+        - Works best in ranging/sideways markets
+        - Divergence between stochastic and price can signal reversals
+
+        Examples
+        --------
+        Calculate the Stochastic Oscillator on OHLC data:
+
+        >>> import pandas as pd
+        >>> import rhoa
+        >>> df = pd.DataFrame({
+        ...     'High':  [110, 112, 111, 113, 115, 114, 116],
+        ...     'Low':   [100, 102, 101, 103, 105, 104, 106],
+        ...     'Close': [105, 108, 106, 110, 112, 109, 113]
+        ... })
+        >>> stoch = df.rhoa.indicators.stochastic(k_window=5, d_window=3)
+        >>> print(stoch.columns.tolist())
+        ['%K', '%D']
+
+        Generate crossover signals:
+
+        >>> df = pd.DataFrame({
+        ...     'High':  [50, 52, 54, 53, 55, 54, 56, 55, 57, 56],
+        ...     'Low':   [48, 49, 51, 50, 52, 51, 53, 52, 54, 53],
+        ...     'Close': [49, 51, 53, 52, 54, 53, 55, 54, 56, 55]
+        ... })
+        >>> stoch = df.rhoa.indicators.stochastic(k_window=5)
+        >>> buy = (stoch['%K'] > stoch['%D']) & (stoch['%K'].shift(1) <= stoch['%D'].shift(1))
         """
         close_s = self._get_series(close, 'close', 'close')
         high_s = self._get_series(high, 'high', 'high')
@@ -971,8 +1167,12 @@ class DataFrameIndicators:
                    **kwargs) -> Series:
         """Calculate Williams %R for momentum and overbought/oversold analysis.
 
-        Auto-detects Close, High, and Low columns from the DataFrame.
-        Pass explicit Series to override auto-detection.
+        Williams %R is a momentum indicator developed by Larry Williams that
+        measures overbought and oversold levels on a scale from -100 to 0. It is
+        the inverse of the Fast Stochastic Oscillator and reflects the level of
+        the close relative to the highest high over the lookback period.
+        Auto-detects Close, High, and Low columns from the DataFrame. Pass
+        explicit Series to override auto-detection.
 
         Parameters
         ----------
@@ -995,6 +1195,62 @@ class DataFrameIndicators:
         -------
         pandas.Series
             A Series containing Williams %R values ranging from -100 to 0.
+
+        See Also
+        --------
+        stochastic : Stochastic Oscillator, closely related indicator
+        rsi : Relative Strength Index for momentum
+        cci : Commodity Channel Index for momentum
+
+        Notes
+        -----
+        Williams %R is calculated as:
+
+        .. math:: \\%R = -100 \\times \\frac{H_n - C_t}{H_n - L_n}
+
+        where :math:`C_t` is the current close, :math:`H_n` is the highest
+        high over the window_size periods, and :math:`L_n` is the lowest low
+        over the window_size periods.
+
+        Williams %R is mathematically related to the Stochastic Oscillator:
+
+        .. math:: \\%R = \\%K - 100
+
+        Traditional interpretation:
+        - %R between -20 and 0: Overbought (potential sell signal)
+        - %R between -100 and -80: Oversold (potential buy signal)
+        - %R = 0: Close equals the highest high of the period
+        - %R = -100: Close equals the lowest low of the period
+
+        Key characteristics:
+        - Range: -100 to 0 (bounded oscillator, negative scale)
+        - Leading indicator: can signal reversals before price
+        - More responsive than RSI to short-term price changes
+        - Works best in ranging markets; use with trend filters
+
+        Examples
+        --------
+        Calculate 14-period Williams %R:
+
+        >>> import pandas as pd
+        >>> import rhoa
+        >>> df = pd.DataFrame({
+        ...     'High':  [110, 112, 111, 113, 115, 114, 116],
+        ...     'Low':   [100, 102, 101, 103, 105, 104, 106],
+        ...     'Close': [105, 108, 106, 110, 112, 109, 113]
+        ... })
+        >>> wr = df.rhoa.indicators.williams_r(window_size=5)
+
+        Identify overbought and oversold conditions:
+
+        >>> df = pd.DataFrame({
+        ...     'High':  [50, 52, 54, 53, 55, 54, 56, 55, 57, 56],
+        ...     'Low':   [48, 49, 51, 50, 52, 51, 53, 52, 54, 53],
+        ...     'Close': [49, 51, 53, 52, 54, 53, 55, 54, 56, 55]
+        ... })
+        >>> wr = df.rhoa.indicators.williams_r(window_size=5)
+        >>> overbought = wr > -20
+        >>> oversold = wr < -80
         """
         close_s = self._get_series(close, 'close', 'close')
         high_s = self._get_series(high, 'high', 'high')
@@ -1011,8 +1267,12 @@ class DataFrameIndicators:
             min_periods: int = None, **kwargs) -> DataFrame:
         """Calculate the Average Directional Index (ADX) for trend strength analysis.
 
-        Auto-detects Close, High, and Low columns from the DataFrame.
-        Pass explicit Series to override auto-detection.
+        ADX is a trend strength indicator developed by J. Welles Wilder Jr. that
+        quantifies the strength of a trend regardless of its direction. It combines
+        the Plus Directional Indicator (+DI) and Minus Directional Indicator (-DI)
+        to measure how strongly price is moving in one direction. Auto-detects
+        Close, High, and Low columns from the DataFrame. Pass explicit Series to
+        override auto-detection.
 
         Parameters
         ----------
@@ -1033,6 +1293,80 @@ class DataFrameIndicators:
         -------
         pandas.DataFrame
             A DataFrame with 'ADX', '+DI', and '-DI' columns.
+
+        See Also
+        --------
+        atr : Average True Range, used internally by ADX
+        rsi : Relative Strength Index for momentum
+        parabolic_sar : Parabolic SAR for trend following
+
+        Notes
+        -----
+        The calculation involves several steps:
+
+        1. **Directional Movement (DM):**
+
+        .. math::
+            +DM_t = \\begin{cases} H_t - H_{t-1} & \\text{if } H_t - H_{t-1} > L_{t-1} - L_t \\text{ and } H_t - H_{t-1} > 0 \\\\ 0 & \\text{otherwise} \\end{cases}
+
+        .. math::
+            -DM_t = \\begin{cases} L_{t-1} - L_t & \\text{if } L_{t-1} - L_t > H_t - H_{t-1} \\text{ and } L_{t-1} - L_t > 0 \\\\ 0 & \\text{otherwise} \\end{cases}
+
+        2. **Directional Indicators (DI):**
+
+        .. math:: +DI = 100 \\times \\frac{EMA(+DM, n)}{EMA(TR, n)}
+
+        .. math:: -DI = 100 \\times \\frac{EMA(-DM, n)}{EMA(TR, n)}
+
+        3. **Directional Index (DX) and ADX:**
+
+        .. math:: DX = 100 \\times \\frac{|{+DI} - {-DI}|}{+DI + {-DI}}
+
+        .. math:: ADX = EMA(DX, n)
+
+        Traditional interpretation:
+        - ADX > 25: Strong trend (consider trend-following strategies)
+        - ADX < 20: Weak trend or ranging market (consider oscillator strategies)
+        - +DI > -DI: Uptrend (bullish)
+        - -DI > +DI: Downtrend (bearish)
+        - +DI crossing above -DI: Bullish crossover signal
+        - -DI crossing above +DI: Bearish crossover signal
+
+        Key characteristics:
+        - ADX measures trend strength, not direction
+        - Rising ADX = strengthening trend; falling ADX = weakening trend
+        - ADX is a lagging indicator due to smoothing
+
+        References
+        ----------
+        .. [1] Wilder, J. W. (1978). New Concepts in Technical Trading Systems.
+               Trend Research.
+
+        Examples
+        --------
+        Calculate 14-period ADX on OHLC data:
+
+        >>> import pandas as pd
+        >>> import rhoa
+        >>> df = pd.DataFrame({
+        ...     'High':  [110, 112, 114, 113, 115, 117, 116],
+        ...     'Low':   [100, 102, 104, 103, 105, 107, 106],
+        ...     'Close': [105, 108, 110, 109, 112, 114, 113]
+        ... })
+        >>> result = df.rhoa.indicators.adx(window_size=5)
+        >>> print(result.columns.tolist())
+        ['ADX', '+DI', '-DI']
+
+        Identify strong trends and crossover signals:
+
+        >>> df = pd.DataFrame({
+        ...     'High':  [50, 52, 54, 56, 58, 57, 55, 53, 51, 49],
+        ...     'Low':   [48, 49, 51, 53, 55, 54, 52, 50, 48, 46],
+        ...     'Close': [49, 51, 53, 55, 57, 56, 54, 52, 50, 48]
+        ... })
+        >>> result = df.rhoa.indicators.adx(window_size=5)
+        >>> strong_trend = result['ADX'] > 25
+        >>> bullish = result['+DI'] > result['-DI']
         """
         close_s = self._get_series(close, 'close', 'close')
         high_s = self._get_series(high, 'high', 'high')
@@ -1083,8 +1417,13 @@ class DataFrameIndicators:
                       af_maximum: float = 0.2) -> Series:
         """Calculate the Parabolic Stop and Reverse (SAR) for trend following.
 
-        Auto-detects Close, High, and Low columns from the DataFrame.
-        Pass explicit Series to override auto-detection.
+        Parabolic SAR is a trend-following indicator developed by J. Welles
+        Wilder Jr. that provides potential entry and exit points. It appears as
+        a series of dots placed above or below the price, indicating bearish or
+        bullish conditions respectively. The "parabolic" name comes from the
+        parabola-shaped curve the dots form as a trend develops. Auto-detects
+        Close, High, and Low columns from the DataFrame. Pass explicit Series
+        to override auto-detection.
 
         Parameters
         ----------
@@ -1106,6 +1445,76 @@ class DataFrameIndicators:
         -------
         pandas.Series
             A Series containing Parabolic SAR values.
+
+        See Also
+        --------
+        adx : Average Directional Index for trend strength
+        atr : Average True Range for volatility-based stops
+        sma : Simple Moving Average for trend identification
+
+        Notes
+        -----
+        The Parabolic SAR is calculated iteratively:
+
+        .. math:: SAR_{t+1} = SAR_t + AF \\times (EP - SAR_t)
+
+        where:
+        - :math:`SAR_t` is the current SAR value
+        - :math:`AF` is the acceleration factor, starting at af_start and
+          increasing by af_increment each time a new extreme point is made,
+          up to af_maximum
+        - :math:`EP` is the extreme point (highest high in uptrend, lowest
+          low in downtrend)
+
+        Trend reversal occurs when price crosses the SAR value:
+        - In an uptrend, if the low touches or falls below SAR, the trend
+          reverses to downtrend
+        - In a downtrend, if the high touches or rises above SAR, the trend
+          reverses to uptrend
+
+        Upon reversal, the SAR is set to the previous extreme point and the
+        acceleration factor resets to af_start.
+
+        Key characteristics:
+        - SAR below price = uptrend (bullish)
+        - SAR above price = downtrend (bearish)
+        - SAR accelerates toward price as a trend develops
+        - Works best in trending markets; can whipsaw in sideways markets
+
+        Common applications:
+        - Setting trailing stop-loss orders
+        - Determining trend direction
+        - Identifying potential reversal points
+        - Combining with ADX to filter for strong trends
+
+        References
+        ----------
+        .. [1] Wilder, J. W. (1978). New Concepts in Technical Trading Systems.
+               Trend Research.
+
+        Examples
+        --------
+        Calculate Parabolic SAR with default parameters:
+
+        >>> import pandas as pd
+        >>> import rhoa
+        >>> df = pd.DataFrame({
+        ...     'High':  [110, 112, 114, 113, 115, 117, 116],
+        ...     'Low':   [100, 102, 104, 103, 105, 107, 106],
+        ...     'Close': [105, 108, 110, 109, 112, 114, 113]
+        ... })
+        >>> sar = df.rhoa.indicators.parabolic_sar()
+
+        Use SAR to determine trend direction:
+
+        >>> df = pd.DataFrame({
+        ...     'High':  [50, 52, 54, 53, 55, 54, 56, 55, 57, 56],
+        ...     'Low':   [48, 49, 51, 50, 52, 51, 53, 52, 54, 53],
+        ...     'Close': [49, 51, 53, 52, 54, 53, 55, 54, 56, 55]
+        ... })
+        >>> sar = df.rhoa.indicators.parabolic_sar(af_start=0.02, af_maximum=0.2)
+        >>> uptrend = df['Close'] > sar
+        >>> downtrend = df['Close'] < sar
         """
         close_s = self._get_series(close, 'close', 'close')
         high_s = self._get_series(high, 'high', 'high')
