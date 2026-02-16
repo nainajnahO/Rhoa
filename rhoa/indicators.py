@@ -750,889 +750,6 @@ class indicators:
             "lower_band": lower
         })
 
-    def atr(self,
-            high: Series,
-            low: Series,
-            window_size: int = 14,
-            min_periods: int = None,
-            center: bool = False,
-            **kwargs) -> Series:
-        """
-        Calculate the Average True Range (ATR) for volatility measurement.
-
-        ATR measures market volatility by calculating the average of true ranges over
-        a specified period. Developed by J. Welles Wilder Jr., it captures volatility
-        including gaps and limit moves that standard range calculations miss. ATR is
-        expressed in the same units as the price data.
-
-        Parameters
-        ----------
-        high : pandas.Series
-            A Series containing the high prices for each period.
-        low : pandas.Series
-            A Series containing the low prices for each period.
-        window_size : int, default 14
-            Length of the rolling window for calculating the average true range.
-            Wilder's original recommendation was 14 periods.
-        min_periods : int, optional
-            Minimum number of observations in window required to have a value.
-            If None, defaults to window_size.
-        center : bool, default False
-            Whether to set the labels at the center of the window.
-        **kwargs : dict
-            Additional keyword arguments passed to pandas rolling function.
-
-        Returns
-        -------
-        pandas.Series
-            A Series containing the calculated ATR values with the same index as
-            the input series. Values are in the same units as price.
-
-        See Also
-        --------
-        ewmstd : Exponential Weighted Moving Standard Deviation
-        bollinger_bands : Volatility bands using standard deviation
-        adx : Average Directional Index (uses ATR in calculation)
-
-        Notes
-        -----
-        The True Range (TR) for each period is calculated as:
-
-        .. math:: TR = max[(H - L), |H - C_{prev}|, |L - C_{prev}|]
-
-        where H is high, L is low, and :math:`C_{prev}` is the previous close.
-
-        The Average True Range is then:
-
-        .. math:: ATR = SMA(TR, window\\_size)
-
-        The three components of True Range capture:
-        1. (H - L): Current period's trading range
-        2. |H - C_prev|: Gap up from previous close
-        3. |L - C_prev|: Gap down from previous close
-
-        Key characteristics:
-        - Always positive (measures absolute volatility)
-        - Same units as price (e.g., dollars, not percentage)
-        - Adapts to changes in volatility
-        - Non-directional (doesn't indicate trend direction)
-
-        ATR is commonly used for:
-        - Position sizing: Adjust position size inversely to volatility
-        - Stop-loss placement: Set stops at multiple of ATR from entry
-        - Profit targets: Scale targets based on expected price movement
-        - Volatility filters: Only trade when ATR is above/below threshold
-        - Chandelier Exit: Trailing stop based on ATR
-
-        Higher ATR values indicate higher volatility and larger expected price
-        movements. Lower values suggest calmer markets with smaller ranges.
-
-        References
-        ----------
-        .. [1] Wilder, J. W. (1978). New Concepts in Technical Trading Systems.
-               Trend Research.
-
-        .. tip::
-            For a simpler API, use the DataFrame accessor:
-            ``df.rhoa.indicators.atr(window_size=14)`` which auto-detects
-            OHLC columns. See :class:`DataFrameIndicators`.
-
-        Examples
-        --------
-        Calculate ATR for position sizing:
-
-        >>> import pandas as pd
-        >>> import rhoa
-        >>> close = pd.Series([100, 102, 101, 103, 105, 104, 106])
-        >>> high = pd.Series([101, 103, 102, 104, 106, 105, 107])
-        >>> low = pd.Series([99, 101, 100, 102, 104, 103, 105])
-        >>> atr = close.rhoa.indicators.atr(high, low, window_size=5)
-        >>> # Use ATR for stop-loss: 2 * ATR below entry
-        >>> stop_distance = 2 * atr.iloc[-1]
-        >>> print(f"ATR: {atr.iloc[-1]:.2f}, Stop distance: {stop_distance:.2f}")
-        ATR: 1.80, Stop distance: 3.60
-
-        Volatility-adjusted position sizing:
-
-        >>> close = pd.Series([100, 105, 110, 108, 112, 115])
-        >>> high = pd.Series([102, 107, 112, 110, 114, 117])
-        >>> low = pd.Series([98, 103, 108, 106, 110, 113])
-        >>> atr = close.rhoa.indicators.atr(high, low, window_size=5)
-        >>> risk_per_trade = 1000  # Fixed dollar risk
-        >>> shares = risk_per_trade / (2 * atr)  # Position size
-        """
-        close = self._series
-
-        high_low = high - low
-        high_close = (high - close.shift(1)).abs()
-        low_close = (low - close.shift(1)).abs()
-
-        true_range = pandas.concat([high_low, high_close, low_close], axis=1).max(axis=1)
-        atr = true_range.rolling(window=window_size, min_periods=min_periods, center=center, **kwargs).mean()
-
-        return atr
-
-    def cci(self,
-            high: Series,
-            low: Series,
-            window_size: int = 20,
-            min_periods: int = None,
-            center: bool = False,
-            **kwargs) -> Series:
-        """
-        Calculate the Commodity Channel Index (CCI) for momentum analysis.
-
-        CCI is a momentum-based oscillator developed by Donald Lambert that measures
-        the variation of a security's price from its statistical mean. It identifies
-        cyclical trends and overbought/oversold conditions by comparing the current
-        typical price to its historical average.
-
-        Parameters
-        ----------
-        high : pandas.Series
-            A Series containing the high prices for each period.
-        low : pandas.Series
-            A Series containing the low prices for each period.
-        window_size : int, default 20
-            Number of periods for calculating the CCI. Standard setting is 20 periods
-            as recommended by Lambert.
-        min_periods : int, optional
-            Minimum number of observations in window required to have a value.
-            If None, defaults to window_size.
-        center : bool, default False
-            Whether to set the labels at the center of the window.
-        **kwargs : dict
-            Additional keyword arguments passed to pandas rolling function.
-
-        Returns
-        -------
-        pandas.Series
-            A Series containing the calculated CCI values with the same index as
-            the input series. Values typically range from -200 to +200.
-
-        See Also
-        --------
-        rsi : Relative Strength Index for momentum
-        stochastic : Stochastic Oscillator for momentum
-        williams_r : Williams %R momentum indicator
-
-        Notes
-        -----
-        The Commodity Channel Index is calculated using:
-
-        .. math::
-            TP = \\frac{High + Low + Close}{3}
-        .. math::
-            CCI = \\frac{TP - SMA(TP)}{0.015 \\times MD}
-
-        where TP is the Typical Price, SMA is the Simple Moving Average, and MD is
-        the Mean Absolute Deviation: :math:`MD = \\frac{1}{n}\\sum|TP_i - SMA(TP)|`
-
-        The constant 0.015 was chosen by Lambert to ensure approximately 70-80% of
-        CCI values fall between -100 and +100.
-
-        Traditional interpretation:
-        - CCI > +100: Overbought condition (potential sell signal)
-        - CCI < -100: Oversold condition (potential buy signal)
-        - CCI around 0: Normal trading range
-        - Extreme readings (>+200 or <-200): Very strong trend
-
-        Key characteristics:
-        - Unbounded oscillator (can exceed ±100 levels)
-        - Uses typical price (H+L+C)/3 for better representation
-        - Mean deviation makes it less sensitive to outliers than std deviation
-        - Designed for commodities but works for any market
-
-        Common CCI strategies:
-        - Overbought/oversold: Trade reversals at ±100 levels
-        - Zero-line crossovers: Trade in direction of crossover
-        - Divergence: CCI diverging from price signals reversal
-        - Trend identification: CCI > 0 (bullish), CCI < 0 (bearish)
-        - Multiple timeframe analysis for confirmation
-
-        References
-        ----------
-        .. [1] Lambert, Donald R. (1980). "Commodity Channel Index: Tools for
-               Trading Cyclic Trends." Commodities Magazine.
-
-        .. tip::
-            For a simpler API, use the DataFrame accessor:
-            ``df.rhoa.indicators.cci(window_size=20)`` which auto-detects
-            OHLC columns. See :class:`DataFrameIndicators`.
-
-        Examples
-        --------
-        Calculate CCI and identify trading signals:
-
-        >>> import pandas as pd
-        >>> import rhoa
-        >>> close = pd.Series([100, 102, 101, 103, 105, 104, 106, 108, 107])
-        >>> high = pd.Series([101, 103, 102, 104, 106, 105, 107, 109, 108])
-        >>> low = pd.Series([99, 101, 100, 102, 104, 103, 105, 107, 106])
-        >>> cci = close.rhoa.indicators.cci(high, low, window_size=5)
-        >>> overbought = cci > 100   # Potential sell signals
-        >>> oversold = cci < -100    # Potential buy signals
-        >>> print(f"Latest CCI: {cci.iloc[-1]:.1f}")
-        Latest CCI: 85.2
-
-        Use CCI for trend-following strategy:
-
-        >>> cci = close.rhoa.indicators.cci(high, low, window_size=20)
-        >>> bullish_trend = cci > 0
-        >>> strong_bullish = cci > 100
-        >>> zero_cross_up = (cci > 0) & (cci.shift(1) <= 0)
-        """
-        close = self._series
-        typical_price = (high + low + close) / 3
-
-        sma = typical_price.rolling(window=window_size, min_periods=min_periods, center=center, **kwargs).mean()
-
-        mean_deviation = typical_price.rolling(window=window_size, min_periods=min_periods, center=center,
-                                               **kwargs).apply(
-            lambda x: numpy.mean(numpy.abs(x - x.mean())),
-            raw=True
-        )
-
-        cci = (typical_price - sma) / (0.015 * mean_deviation)
-
-        return cci
-
-    def stochastic(self,
-                   high: Series,
-                   low: Series,
-                   k_window: int = 14,
-                   d_window: int = 3,
-                   min_periods: int = None,
-                   center: bool = False,
-                   **kwargs) -> DataFrame:
-        """
-        Calculate the Stochastic Oscillator (%K and %D) for momentum analysis.
-
-        The Stochastic Oscillator, developed by George Lane, compares a closing price
-        to its price range over a given time period. It is based on the observation
-        that in uptrends, prices tend to close near their highs, and in downtrends,
-        prices tend to close near their lows.
-
-        Parameters
-        ----------
-        high : pandas.Series
-            A Series containing the high prices for each period.
-        low : pandas.Series
-            A Series containing the low prices for each period.
-        k_window : int, default 14
-            Number of periods for %K calculation (the lookback period). Standard
-            setting is 14 periods.
-        d_window : int, default 3
-            Number of periods for %D calculation (SMA of %K). The %D line is often
-            called the "signal line". Standard setting is 3 periods.
-        min_periods : int, optional
-            Minimum observations in window required to have a value.
-            If None, defaults to window size for each calculation.
-        center : bool, default False
-            Whether to set the labels at the center of the window.
-        **kwargs : dict
-            Additional keyword arguments passed to pandas rolling function.
-
-        Returns
-        -------
-        pandas.DataFrame
-            A DataFrame with two columns:
-            - '%K' : Fast stochastic line (raw stochastic value)
-            - '%D' : Slow stochastic line (SMA of %K, signal line)
-
-        See Also
-        --------
-        rsi : Relative Strength Index for momentum
-        williams_r : Williams %R (inverse of Stochastic)
-        cci : Commodity Channel Index for momentum
-
-        Notes
-        -----
-        The Stochastic Oscillator is calculated using:
-
-        .. math::
-            \\%K = 100 \\times \\frac{Close - Lowest\\_Low}{Highest\\_High - Lowest\\_Low}
-        .. math::
-            \\%D = SMA(\\%K, d\\_window)
-
-        where Lowest_Low and Highest_High are the lowest low and highest high over
-        the k_window period.
-
-        Traditional interpretation:
-        - %K > 80: Overbought condition (potential sell signal)
-        - %K < 20: Oversold condition (potential buy signal)
-        - %K crossing above %D: Bullish signal
-        - %K crossing below %D: Bearish signal
-        - Divergence: Stochastic diverging from price signals reversal
-
-        Key characteristics:
-        - Bounded oscillator: ranges from 0 to 100
-        - Leading indicator: often changes direction before price
-        - Works best in ranging markets
-        - Can remain overbought/oversold during strong trends
-
-        Common Stochastic strategies:
-        - %K/%D crossovers: Trade in direction of crossover
-        - Overbought/oversold: Mean reversion trades at extremes
-        - Divergence: Trade against prevailing trend when diverging
-        - Bull/bear setups: Look for specific patterns in %K behavior
-        - Multiple timeframe confirmation
-
-        Variants:
-        - Fast Stochastic: Uses %K directly (more sensitive)
-        - Slow Stochastic: Uses %D as main line (smoother)
-        - Full Stochastic: Customizable smoothing parameters
-
-        References
-        ----------
-        .. [1] Lane, George C. (1984). "Lane's Stochastics." Technical Analysis
-               of Stocks and Commodities Magazine.
-
-        .. tip::
-            For a simpler API, use the DataFrame accessor:
-            ``df.rhoa.indicators.stochastic(k_window=14, d_window=3)`` which auto-detects
-            OHLC columns. See :class:`DataFrameIndicators`.
-
-        Examples
-        --------
-        Calculate Stochastic Oscillator and identify signals:
-
-        >>> import pandas as pd
-        >>> import rhoa
-        >>> close = pd.Series([100, 102, 101, 103, 105, 104, 106, 108, 107])
-        >>> high = pd.Series([101, 103, 102, 104, 106, 105, 107, 109, 108])
-        >>> low = pd.Series([99, 101, 100, 102, 104, 103, 105, 107, 106])
-        >>> stoch = close.rhoa.indicators.stochastic(high, low, k_window=5, d_window=3)
-        >>> overbought = stoch['%K'] > 80  # Potential sell signals
-        >>> oversold = stoch['%K'] < 20   # Potential buy signals
-        >>> print(f"%K: {stoch['%K'].iloc[-1]:.1f}, %D: {stoch['%D'].iloc[-1]:.1f}")
-        %K: 75.0, %D: 72.3
-
-        Identify bullish and bearish crossovers:
-
-        >>> stoch = close.rhoa.indicators.stochastic(high, low)
-        >>> bullish_cross = (stoch['%K'] > stoch['%D']) & (stoch['%K'].shift(1) <= stoch['%D'].shift(1))
-        >>> bearish_cross = (stoch['%K'] < stoch['%D']) & (stoch['%K'].shift(1) >= stoch['%D'].shift(1))
-        """
-
-        # Calculate %K
-        lowest_low = low.rolling(window=k_window, min_periods=min_periods, center=center, **kwargs).min()
-        highest_high = high.rolling(window=k_window, min_periods=min_periods, center=center, **kwargs).max()
-
-        k_percent = 100 * ((self._series - lowest_low) / (highest_high - lowest_low))
-
-        # Calculate %D (SMA of %K)
-        d_percent = k_percent.rolling(window=d_window, min_periods=min_periods, center=center, **kwargs).mean()
-
-        return DataFrame({
-            "%K": k_percent,
-            "%D": d_percent
-        })
-
-    def williams_r(self,
-                   high: Series,
-                   low: Series,
-                   window_size: int = 14,
-                   min_periods: int = None,
-                   center: bool = False,
-                   **kwargs) -> Series:
-        """
-        Calculate Williams %R for momentum and overbought/oversold analysis.
-
-        Williams %R, developed by Larry Williams, is a momentum indicator that measures
-        overbought and oversold levels. It is essentially an inverted and rescaled
-        Stochastic Oscillator, showing where the current close is relative to the
-        highest high over the lookback period.
-
-        Parameters
-        ----------
-        high : pandas.Series
-            A Series containing the high prices for each period.
-        low : pandas.Series
-            A Series containing the low prices for each period.
-        window_size : int, default 14
-            Number of periods for Williams %R calculation (the lookback period).
-            Standard setting is 14 periods.
-        min_periods : int, optional
-            Minimum observations in window required to have a value.
-            If None, defaults to window_size.
-        center : bool, default False
-            Whether to set the labels at the center of the window.
-        **kwargs : dict
-            Additional keyword arguments passed to pandas rolling function.
-
-        Returns
-        -------
-        pandas.Series
-            A Series containing Williams %R values ranging from -100 to 0 with
-            the same index as the input series.
-
-        See Also
-        --------
-        stochastic : Stochastic Oscillator (similar calculation)
-        rsi : Relative Strength Index for momentum
-        cci : Commodity Channel Index for momentum
-
-        Notes
-        -----
-        Williams %R is calculated using:
-
-        .. math::
-            Williams\\%R = -100 \\times \\frac{Highest\\_High - Close}{Highest\\_High - Lowest\\_Low}
-
-        where Highest_High and Lowest_Low are calculated over the window_size period.
-
-        This is equivalent to an inverted Stochastic %K:
-
-        .. math:: Williams\\%R = Stochastic\\%K - 100
-
-        Traditional interpretation:
-        - Williams %R > -20: Overbought (potential sell signal)
-        - Williams %R < -80: Oversold (potential buy signal)
-        - Williams %R between -20 and -80: Normal range
-        - Values closer to 0: Stronger upward momentum
-        - Values closer to -100: Stronger downward momentum
-
-        Key characteristics:
-        - Bounded oscillator: ranges from -100 to 0
-        - Negative scale (inverted from Stochastic)
-        - Fast and sensitive to price changes
-        - Leading indicator (changes before price)
-        - Works best in ranging markets
-
-        Common Williams %R strategies:
-        - Overbought/oversold: Mean reversion at -20/-80 levels
-        - Failure swings: Failed tests of -20 or -80 signal reversals
-        - Divergence: %R diverging from price signals trend weakness
-        - Momentum confirmation: Confirming breakouts and trends
-        - Multiple timeframe analysis for confirmation
-
-        The negative scale is deliberate - Williams preferred it as it emphasizes
-        that high values (near 0) represent overbought and low values (near -100)
-        represent oversold, consistent with the downward pressure metaphor.
-
-        References
-        ----------
-        .. [1] Williams, Larry (1979). How I Made One Million Dollars Last Year
-               Trading Commodities. Windsor Books.
-
-        .. tip::
-            For a simpler API, use the DataFrame accessor:
-            ``df.rhoa.indicators.williams_r(window_size=14)`` which auto-detects
-            OHLC columns. See :class:`DataFrameIndicators`.
-
-        Examples
-        --------
-        Calculate Williams %R and identify trading signals:
-
-        >>> import pandas as pd
-        >>> import rhoa
-        >>> close = pd.Series([100, 102, 101, 103, 105, 104, 106, 108, 107])
-        >>> high = pd.Series([101, 103, 102, 104, 106, 105, 107, 109, 108])
-        >>> low = pd.Series([99, 101, 100, 102, 104, 103, 105, 107, 106])
-        >>> wr = close.rhoa.indicators.williams_r(high, low, window_size=5)
-        >>> overbought = wr > -20  # Potential sell signals
-        >>> oversold = wr < -80   # Potential buy signals
-        >>> print(f"Williams %R: {wr.iloc[-1]:.1f}")
-        Williams %R: -25.0
-
-        Detect bullish divergence for reversal signals:
-
-        >>> wr = close.rhoa.indicators.williams_r(high, low, window_size=14)
-        >>> price_lower_low = close < close.shift(5).rolling(5).min()
-        >>> wr_higher_low = wr > wr.shift(5).rolling(5).min()
-        >>> bullish_divergence = price_lower_low & wr_higher_low
-        """
-        close = self._series
-
-        # Calculate Williams %R
-        highest_high = high.rolling(window=window_size, min_periods=min_periods, center=center, **kwargs).max()
-        lowest_low = low.rolling(window=window_size, min_periods=min_periods, center=center, **kwargs).min()
-
-        williams_r = -100 * ((highest_high - close) / (highest_high - lowest_low))
-
-        return williams_r
-
-    def adx(self,
-            high: Series,
-            low: Series,
-            window_size: int = 14,
-            min_periods: int = None,
-            **kwargs) -> DataFrame:
-        """
-        Calculate the Average Directional Index (ADX) for trend strength analysis.
-
-        ADX, developed by J. Welles Wilder Jr., is a non-directional indicator that
-        quantifies trend strength regardless of direction. It is derived from the
-        Directional Movement System and helps traders determine whether a market is
-        trending or ranging, which is crucial for strategy selection.
-
-        Parameters
-        ----------
-        high : pandas.Series
-            A Series containing the high prices for each period.
-        low : pandas.Series
-            A Series containing the low prices for each period.
-        window_size : int, default 14
-            Number of periods for ADX calculation. Wilder's original recommendation
-            was 14 periods.
-        min_periods : int, optional
-            Minimum observations in window required to have a value.
-            If None, defaults to 0 for exponential moving average calculations.
-        **kwargs : dict
-            Additional keyword arguments passed to pandas ewm function.
-
-        Returns
-        -------
-        pandas.DataFrame
-            A DataFrame with three columns:
-            - 'ADX' : Average Directional Index (trend strength, 0-100)
-            - '+DI' : Plus Directional Indicator (upward movement strength)
-            - '-DI' : Minus Directional Indicator (downward movement strength)
-
-        See Also
-        --------
-        atr : Average True Range (used in ADX calculation)
-        parabolic_sar : Parabolic SAR for trend following
-        macd : Moving Average Convergence Divergence
-
-        Notes
-        -----
-        The ADX calculation involves multiple steps:
-
-        1. Calculate True Range (TR) - same as ATR
-        2. Calculate Directional Movement:
-
-        .. math::
-            +DM = High_t - High_{t-1} \\text{ (if positive and greater than -DM, else 0)}
-        .. math::
-            -DM = Low_{t-1} - Low_t \\text{ (if positive and greater than +DM, else 0)}
-
-        3. Calculate Directional Indicators:
-
-        .. math::
-            +DI = 100 \\times \\frac{EMA(+DM)}{ATR}
-        .. math::
-            -DI = 100 \\times \\frac{EMA(-DM)}{ATR}
-
-        4. Calculate Directional Index (DX):
-
-        .. math::
-            DX = 100 \\times \\frac{|+DI - -DI|}{+DI + -DI}
-
-        5. Calculate ADX:
-
-        .. math::
-            ADX = EMA(DX, window\\_size)
-
-        Traditional interpretation:
-        - ADX > 25: Strong trend (worthwhile to use trend-following strategies)
-        - ADX > 50: Very strong trend
-        - ADX < 20: Weak trend or sideways market (use range-bound strategies)
-        - +DI > -DI: Uptrend (with magnitude indicating strength)
-        - -DI > +DI: Downtrend (with magnitude indicating strength)
-
-        Key characteristics:
-        - Non-directional: ADX measures strength, not direction
-        - Bounded: ranges from 0 to 100 (though rarely exceeds 60)
-        - Lagging indicator: confirms trend after it has started
-        - +DI/-DI crossovers can signal trend changes
-
-        Common ADX strategies:
-        - Trend filter: Only trade trends when ADX > 25
-        - DI crossovers: Trade when +DI crosses -DI and ADX > 20
-        - ADX slope: Rising ADX confirms strengthening trend
-        - ADX peak: Falling ADX after peak may signal trend exhaustion
-        - Combined with other indicators for confirmation
-
-        The ADX system is particularly useful for:
-        - Determining market regime (trending vs. ranging)
-        - Strategy selection (trend-following vs. mean-reversion)
-        - Risk management (avoid counter-trend trades in strong trends)
-        - Confirming breakouts and trend continuations
-
-        References
-        ----------
-        .. [1] Wilder, J. W. (1978). New Concepts in Technical Trading Systems.
-               Trend Research.
-
-        .. tip::
-            For a simpler API, use the DataFrame accessor:
-            ``df.rhoa.indicators.adx(window_size=14)`` which auto-detects
-            OHLC columns. See :class:`DataFrameIndicators`.
-
-        Examples
-        --------
-        Calculate ADX and assess trend strength:
-
-        >>> import pandas as pd
-        >>> import rhoa
-        >>> close = pd.Series([100, 102, 104, 106, 108, 110, 112, 114, 116])
-        >>> high = pd.Series([101, 103, 105, 107, 109, 111, 113, 115, 117])
-        >>> low = pd.Series([99, 101, 103, 105, 107, 109, 111, 113, 115])
-        >>> adx_data = close.rhoa.indicators.adx(high, low, window_size=5)
-        >>> strong_trend = adx_data['ADX'] > 25  # Strong trend identification
-        >>> bullish = adx_data['+DI'] > adx_data['-DI']  # Uptrend
-        >>> print(f"ADX: {adx_data['ADX'].iloc[-1]:.1f}")
-        ADX: 45.2
-
-        Use ADX for strategy selection:
-
-        >>> adx_data = close.rhoa.indicators.adx(high, low, window_size=14)
-        >>> trending_market = adx_data['ADX'] > 25
-        >>> ranging_market = adx_data['ADX'] < 20
-        >>> bullish_trend = trending_market & (adx_data['+DI'] > adx_data['-DI'])
-        >>> bearish_trend = trending_market & (adx_data['-DI'] > adx_data['+DI'])
-        """
-        close = self._series
-
-        # Calculate True Range (same as ATR calculation)
-        high_low = high - low
-        high_close = (high - close.shift(1)).abs()
-        low_close = (low - close.shift(1)).abs()
-        true_range = pandas.concat([high_low, high_close, low_close], axis=1).max(axis=1)
-
-        # Calculate Directional Movement
-        high_diff = high.diff()
-        low_diff = low.diff()
-
-        plus_dm = pandas.Series(numpy.where((high_diff > low_diff) & (high_diff > 0), high_diff, 0), index=high.index)
-        minus_dm = pandas.Series(numpy.where((low_diff > high_diff) & (low_diff > 0), low_diff, 0), index=low.index)
-
-        # Smooth the True Range and Directional Movement using EWM
-        atr = true_range.ewm(span=window_size, adjust=False, min_periods=min_periods, **kwargs).mean()
-        plus_di_smooth = plus_dm.ewm(span=window_size, adjust=False, min_periods=min_periods, **kwargs).mean()
-        minus_di_smooth = minus_dm.ewm(span=window_size, adjust=False, min_periods=min_periods, **kwargs).mean()
-
-        # Calculate +DI and -DI
-        plus_di = 100 * (plus_di_smooth / atr)
-        minus_di = 100 * (minus_di_smooth / atr)
-
-        # Calculate ADX
-        dx = 100 * ((plus_di - minus_di).abs() / (plus_di + minus_di))
-        adx = dx.ewm(span=window_size, adjust=False, min_periods=min_periods, **kwargs).mean()
-
-        return DataFrame({
-            "ADX": adx,
-            "+DI": plus_di,
-            "-DI": minus_di
-        })
-
-    def parabolic_sar(self,
-                      high: Series,
-                      low: Series,
-                      af_start: float = 0.02,
-                      af_increment: float = 0.02,
-                      af_maximum: float = 0.2) -> Series:
-        """
-        Calculate the Parabolic Stop and Reverse (SAR) for trend following.
-
-        Parabolic SAR, developed by J. Welles Wilder Jr., is a trend-following
-        indicator that provides potential reversal points and trailing stop levels.
-        The indicator places dots above or below price that "flip" when the trend
-        reverses, providing both trend identification and stop-loss guidance.
-
-        Parameters
-        ----------
-        high : pandas.Series
-            A Series containing the high prices for each period.
-        low : pandas.Series
-            A Series containing the low prices for each period.
-        af_start : float, default 0.02
-            Initial acceleration factor. Determines the starting sensitivity of the
-            SAR to price movement. Wilder's standard value is 0.02.
-        af_increment : float, default 0.02
-            Increment added to acceleration factor when a new extreme point is
-            reached during the trend. Standard value is 0.02.
-        af_maximum : float, default 0.2
-            Maximum acceleration factor value. Caps the SAR sensitivity to prevent
-            it from getting too close to price. Standard value is 0.2.
-
-        Returns
-        -------
-        pandas.Series
-            A Series containing Parabolic SAR values with the same index as the
-            input series. Values represent trailing stop levels.
-
-        See Also
-        --------
-        adx : Average Directional Index for trend strength
-        macd : Moving Average Convergence Divergence
-        atr : Average True Range (useful for stop-loss placement)
-
-        Notes
-        -----
-        The Parabolic SAR algorithm works as follows:
-
-        For an uptrend (SAR below price):
-
-        .. math::
-            SAR_{t+1} = SAR_t + AF \\times (EP - SAR_t)
-
-        For a downtrend (SAR above price):
-
-        .. math::
-            SAR_{t+1} = SAR_t + AF \\times (EP - SAR_t)
-
-        where:
-        - EP (Extreme Point) is the highest high in uptrend or lowest low in downtrend
-        - AF (Acceleration Factor) starts at af_start and increases by af_increment
-          each time a new EP is recorded, capped at af_maximum
-
-        Trend reversal occurs when:
-        - Uptrend: Price falls below the SAR
-        - Downtrend: Price rises above the SAR
-
-        Upon reversal:
-        - SAR becomes the previous trend's EP
-        - AF resets to af_start
-        - EP becomes the new extreme in the new trend direction
-
-        Traditional interpretation:
-        - Price above SAR: Uptrend (SAR acts as trailing support)
-        - Price below SAR: Downtrend (SAR acts as trailing resistance)
-        - SAR flip: Potential trend reversal signal
-        - Rising SAR (uptrend): Trailing stop moves up, locking in profits
-        - Falling SAR (downtrend): Trailing stop moves down
-
-        Key characteristics:
-        - Always in the market (either long or short)
-        - Provides objective stop-loss levels
-        - Self-accelerating (AF increases with trend duration)
-        - Works best in trending markets
-        - Generates false signals in ranging markets
-
-        Common Parabolic SAR strategies:
-        - Basic SAR system: Long when price > SAR, short when price < SAR
-        - SAR + ADX: Only trade SAR signals when ADX > 25 (strong trend)
-        - SAR + MACD: Use SAR for stops, MACD for entry confirmation
-        - Trailing stops: Use SAR as dynamic stop-loss level
-        - Multiple timeframe: Confirm SAR signals across timeframes
-
-        Parameter adjustments:
-        - Lower af_start/af_increment: Slower SAR, fewer reversals (more reliable)
-        - Higher af_maximum: Faster SAR, more responsive (more signals)
-        - Optimize parameters based on market volatility and timeframe
-
-        References
-        ----------
-        .. [1] Wilder, J. W. (1978). New Concepts in Technical Trading Systems.
-               Trend Research.
-
-        .. tip::
-            For a simpler API, use the DataFrame accessor:
-            ``df.rhoa.indicators.parabolic_sar()`` which auto-detects
-            OHLC columns. See :class:`DataFrameIndicators`.
-
-        Examples
-        --------
-        Calculate Parabolic SAR for trend identification and stops:
-
-        >>> import pandas as pd
-        >>> import rhoa
-        >>> close = pd.Series([100, 102, 104, 103, 105, 107, 106, 108, 110])
-        >>> high = pd.Series([101, 103, 105, 104, 106, 108, 107, 109, 111])
-        >>> low = pd.Series([99, 101, 103, 102, 104, 106, 105, 107, 109])
-        >>> sar = close.rhoa.indicators.parabolic_sar(high, low)
-        >>> uptrend = close > sar    # Price above SAR = uptrend
-        >>> downtrend = close < sar  # Price below SAR = downtrend
-        >>> print(f"Latest SAR: {sar.iloc[-1]:.2f}")
-        Latest SAR: 99.45
-
-        Use SAR as trailing stop-loss:
-
-        >>> sar = close.rhoa.indicators.parabolic_sar(high, low)
-        >>> position = (close > sar).astype(int) - (close < sar).astype(int)
-        >>> # position: 1 = long, -1 = short, 0 = neutral
-        >>> stop_loss = sar  # Use SAR as stop level
-
-        Combine SAR with ADX for better signals:
-
-        >>> sar = close.rhoa.indicators.parabolic_sar(high, low)
-        >>> adx_data = close.rhoa.indicators.adx(high, low)
-        >>> strong_trend = adx_data['ADX'] > 25
-        >>> long_signal = (close > sar) & strong_trend
-        >>> short_signal = (close < sar) & strong_trend
-        """
-        close = self._series
-
-        # Initialize arrays
-        length = len(close)
-        sar = numpy.zeros(length)
-        trend = numpy.zeros(length, dtype=int)  # 1 for uptrend, -1 for downtrend
-        af = numpy.zeros(length)
-        ep = numpy.zeros(length)  # Extreme Point
-
-        # Initialize first values
-        sar[0] = float(low.iloc[0])
-        trend[0] = 1  # Start with uptrend
-        af[0] = af_start
-        ep[0] = float(high.iloc[0])
-
-        for i in range(1, length):
-            # Previous values
-            prev_sar = sar[i - 1]
-            prev_trend = trend[i - 1]
-            prev_af = af[i - 1]
-            prev_ep = ep[i - 1]
-
-            # Calculate new SAR
-            if prev_trend == 1:  # Uptrend
-                sar[i] = prev_sar + prev_af * (prev_ep - prev_sar)
-
-                # Check for trend reversal
-                if float(low.iloc[i]) <= sar[i]:
-                    # Trend reversal to downtrend
-                    trend[i] = -1
-                    sar[i] = prev_ep  # SAR becomes the previous extreme point
-                    af[i] = af_start
-                    ep[i] = float(low.iloc[i])
-                else:
-                    # Continue uptrend
-                    trend[i] = 1
-
-                    # Update extreme point and acceleration factor
-                    if float(high.iloc[i]) > prev_ep:
-                        ep[i] = float(high.iloc[i])
-                        af[i] = min(prev_af + af_increment, af_maximum)
-                    else:
-                        ep[i] = prev_ep
-                        af[i] = prev_af
-
-                    # Ensure SAR doesn't exceed previous lows
-                    sar[i] = min(sar[i], float(low.iloc[i - 1]))
-                    if i >= 2:
-                        sar[i] = min(sar[i], float(low.iloc[i - 2]))
-
-            else:  # Downtrend
-                sar[i] = prev_sar + prev_af * (prev_ep - prev_sar)
-
-                # Check for trend reversal
-                if float(high.iloc[i]) >= sar[i]:
-                    # Trend reversal to uptrend
-                    trend[i] = 1
-                    sar[i] = prev_ep  # SAR becomes the previous extreme point
-                    af[i] = af_start
-                    ep[i] = float(high.iloc[i])
-                else:
-                    # Continue downtrend
-                    trend[i] = -1
-
-                    # Update extreme point and acceleration factor
-                    if float(low.iloc[i]) < prev_ep:
-                        ep[i] = float(low.iloc[i])
-                        af[i] = min(prev_af + af_increment, af_maximum)
-                    else:
-                        ep[i] = prev_ep
-                        af[i] = prev_af
-
-                    # Ensure SAR doesn't exceed previous highs
-                    sar[i] = max(sar[i], float(high.iloc[i - 1]))
-                    if i >= 2:
-                        sar[i] = max(sar[i], float(high.iloc[i - 2]))
-
-        return pandas.Series(sar, index=close.index)
-
 
 class DataFrameIndicators:
     """DataFrame-level indicators accessor for OHLC operations.
@@ -1713,55 +830,348 @@ class DataFrameIndicators:
             window_size=window_size, num_std=num_std, min_periods=min_periods,
             center=center, **kwargs)
 
-    # --- OHLC indicators (auto-detect Close, High, Low) ---
+    # --- OHLC indicators (DataFrame-only, auto-detect Close, High, Low) ---
 
     def atr(self, close=None, high=None, low=None, window_size: int = 14,
             min_periods: int = None, center: bool = False, **kwargs) -> Series:
+        """Calculate the Average True Range (ATR) for volatility measurement.
+
+        Auto-detects Close, High, and Low columns from the DataFrame.
+        Pass explicit Series to override auto-detection.
+
+        Parameters
+        ----------
+        close : pandas.Series, optional
+            Close prices. Auto-detected from DataFrame if not provided.
+        high : pandas.Series, optional
+            High prices. Auto-detected from DataFrame if not provided.
+        low : pandas.Series, optional
+            Low prices. Auto-detected from DataFrame if not provided.
+        window_size : int, default 14
+            Length of the rolling window for calculating the average true range.
+        min_periods : int, optional
+            Minimum number of observations in window required to have a value.
+        center : bool, default False
+            Whether to set the labels at the center of the window.
+        **kwargs : dict
+            Additional keyword arguments passed to pandas rolling function.
+
+        Returns
+        -------
+        pandas.Series
+            A Series containing the calculated ATR values.
+        """
+        close_s = self._get_series(close, 'close', 'close')
         high_s = self._get_series(high, 'high', 'high')
         low_s = self._get_series(low, 'low', 'low')
-        return self._get_close_indicators(close).atr(
-            high=high_s, low=low_s, window_size=window_size,
-            min_periods=min_periods, center=center, **kwargs)
+
+        high_low = high_s - low_s
+        high_close = (high_s - close_s.shift(1)).abs()
+        low_close = (low_s - close_s.shift(1)).abs()
+
+        true_range = pandas.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+        return true_range.rolling(window=window_size, min_periods=min_periods,
+                                  center=center, **kwargs).mean()
 
     def cci(self, close=None, high=None, low=None, window_size: int = 20,
             min_periods: int = None, center: bool = False, **kwargs) -> Series:
+        """Calculate the Commodity Channel Index (CCI) for momentum analysis.
+
+        Auto-detects Close, High, and Low columns from the DataFrame.
+        Pass explicit Series to override auto-detection.
+
+        Parameters
+        ----------
+        close : pandas.Series, optional
+            Close prices. Auto-detected from DataFrame if not provided.
+        high : pandas.Series, optional
+            High prices. Auto-detected from DataFrame if not provided.
+        low : pandas.Series, optional
+            Low prices. Auto-detected from DataFrame if not provided.
+        window_size : int, default 20
+            Number of periods for calculating the CCI.
+        min_periods : int, optional
+            Minimum number of observations in window required to have a value.
+        center : bool, default False
+            Whether to set the labels at the center of the window.
+        **kwargs : dict
+            Additional keyword arguments passed to pandas rolling function.
+
+        Returns
+        -------
+        pandas.Series
+            A Series containing the calculated CCI values.
+        """
+        close_s = self._get_series(close, 'close', 'close')
         high_s = self._get_series(high, 'high', 'high')
         low_s = self._get_series(low, 'low', 'low')
-        return self._get_close_indicators(close).cci(
-            high=high_s, low=low_s, window_size=window_size,
-            min_periods=min_periods, center=center, **kwargs)
+
+        typical_price = (high_s + low_s + close_s) / 3
+        sma = typical_price.rolling(window=window_size, min_periods=min_periods,
+                                    center=center, **kwargs).mean()
+        mean_deviation = typical_price.rolling(
+            window=window_size, min_periods=min_periods, center=center,
+            **kwargs).apply(
+            lambda x: numpy.mean(numpy.abs(x - x.mean())),
+            raw=True
+        )
+        return (typical_price - sma) / (0.015 * mean_deviation)
 
     def stochastic(self, close=None, high=None, low=None, k_window: int = 14,
                    d_window: int = 3, min_periods: int = None,
                    center: bool = False, **kwargs) -> DataFrame:
+        """Calculate the Stochastic Oscillator (%K and %D) for momentum analysis.
+
+        Auto-detects Close, High, and Low columns from the DataFrame.
+        Pass explicit Series to override auto-detection.
+
+        Parameters
+        ----------
+        close : pandas.Series, optional
+            Close prices. Auto-detected from DataFrame if not provided.
+        high : pandas.Series, optional
+            High prices. Auto-detected from DataFrame if not provided.
+        low : pandas.Series, optional
+            Low prices. Auto-detected from DataFrame if not provided.
+        k_window : int, default 14
+            Number of periods for %K calculation.
+        d_window : int, default 3
+            Number of periods for %D calculation (SMA of %K).
+        min_periods : int, optional
+            Minimum observations in window required to have a value.
+        center : bool, default False
+            Whether to set the labels at the center of the window.
+        **kwargs : dict
+            Additional keyword arguments passed to pandas rolling function.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A DataFrame with '%K' and '%D' columns.
+        """
+        close_s = self._get_series(close, 'close', 'close')
         high_s = self._get_series(high, 'high', 'high')
         low_s = self._get_series(low, 'low', 'low')
-        return self._get_close_indicators(close).stochastic(
-            high=high_s, low=low_s, k_window=k_window, d_window=d_window,
-            min_periods=min_periods, center=center, **kwargs)
+
+        lowest_low = low_s.rolling(window=k_window, min_periods=min_periods,
+                                   center=center, **kwargs).min()
+        highest_high = high_s.rolling(window=k_window, min_periods=min_periods,
+                                      center=center, **kwargs).max()
+        k_percent = 100 * ((close_s - lowest_low) / (highest_high - lowest_low))
+        d_percent = k_percent.rolling(window=d_window, min_periods=min_periods,
+                                      center=center, **kwargs).mean()
+
+        return DataFrame({
+            "%K": k_percent,
+            "%D": d_percent
+        })
 
     def williams_r(self, close=None, high=None, low=None, window_size: int = 14,
                    min_periods: int = None, center: bool = False,
                    **kwargs) -> Series:
+        """Calculate Williams %R for momentum and overbought/oversold analysis.
+
+        Auto-detects Close, High, and Low columns from the DataFrame.
+        Pass explicit Series to override auto-detection.
+
+        Parameters
+        ----------
+        close : pandas.Series, optional
+            Close prices. Auto-detected from DataFrame if not provided.
+        high : pandas.Series, optional
+            High prices. Auto-detected from DataFrame if not provided.
+        low : pandas.Series, optional
+            Low prices. Auto-detected from DataFrame if not provided.
+        window_size : int, default 14
+            Number of periods for Williams %R calculation.
+        min_periods : int, optional
+            Minimum observations in window required to have a value.
+        center : bool, default False
+            Whether to set the labels at the center of the window.
+        **kwargs : dict
+            Additional keyword arguments passed to pandas rolling function.
+
+        Returns
+        -------
+        pandas.Series
+            A Series containing Williams %R values ranging from -100 to 0.
+        """
+        close_s = self._get_series(close, 'close', 'close')
         high_s = self._get_series(high, 'high', 'high')
         low_s = self._get_series(low, 'low', 'low')
-        return self._get_close_indicators(close).williams_r(
-            high=high_s, low=low_s, window_size=window_size,
-            min_periods=min_periods, center=center, **kwargs)
+
+        highest_high = high_s.rolling(window=window_size, min_periods=min_periods,
+                                      center=center, **kwargs).max()
+        lowest_low = low_s.rolling(window=window_size, min_periods=min_periods,
+                                   center=center, **kwargs).min()
+
+        return -100 * ((highest_high - close_s) / (highest_high - lowest_low))
 
     def adx(self, close=None, high=None, low=None, window_size: int = 14,
             min_periods: int = None, **kwargs) -> DataFrame:
+        """Calculate the Average Directional Index (ADX) for trend strength analysis.
+
+        Auto-detects Close, High, and Low columns from the DataFrame.
+        Pass explicit Series to override auto-detection.
+
+        Parameters
+        ----------
+        close : pandas.Series, optional
+            Close prices. Auto-detected from DataFrame if not provided.
+        high : pandas.Series, optional
+            High prices. Auto-detected from DataFrame if not provided.
+        low : pandas.Series, optional
+            Low prices. Auto-detected from DataFrame if not provided.
+        window_size : int, default 14
+            Number of periods for ADX calculation.
+        min_periods : int, optional
+            Minimum observations in window required to have a value.
+        **kwargs : dict
+            Additional keyword arguments passed to pandas ewm function.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A DataFrame with 'ADX', '+DI', and '-DI' columns.
+        """
+        close_s = self._get_series(close, 'close', 'close')
         high_s = self._get_series(high, 'high', 'high')
         low_s = self._get_series(low, 'low', 'low')
-        return self._get_close_indicators(close).adx(
-            high=high_s, low=low_s, window_size=window_size,
-            min_periods=min_periods, **kwargs)
+
+        # Calculate True Range
+        high_low = high_s - low_s
+        high_close = (high_s - close_s.shift(1)).abs()
+        low_close = (low_s - close_s.shift(1)).abs()
+        true_range = pandas.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+
+        # Calculate Directional Movement
+        high_diff = high_s.diff()
+        low_diff = low_s.diff()
+
+        plus_dm = pandas.Series(
+            numpy.where((high_diff > low_diff) & (high_diff > 0), high_diff, 0),
+            index=high_s.index)
+        minus_dm = pandas.Series(
+            numpy.where((low_diff > high_diff) & (low_diff > 0), low_diff, 0),
+            index=low_s.index)
+
+        # Smooth using EWM
+        atr = true_range.ewm(span=window_size, adjust=False,
+                              min_periods=min_periods, **kwargs).mean()
+        plus_di_smooth = plus_dm.ewm(span=window_size, adjust=False,
+                                      min_periods=min_periods, **kwargs).mean()
+        minus_di_smooth = minus_dm.ewm(span=window_size, adjust=False,
+                                        min_periods=min_periods, **kwargs).mean()
+
+        # Calculate +DI and -DI
+        plus_di = 100 * (plus_di_smooth / atr)
+        minus_di = 100 * (minus_di_smooth / atr)
+
+        # Calculate ADX
+        dx = 100 * ((plus_di - minus_di).abs() / (plus_di + minus_di))
+        adx = dx.ewm(span=window_size, adjust=False,
+                      min_periods=min_periods, **kwargs).mean()
+
+        return DataFrame({
+            "ADX": adx,
+            "+DI": plus_di,
+            "-DI": minus_di
+        })
 
     def parabolic_sar(self, close=None, high=None, low=None,
                       af_start: float = 0.02, af_increment: float = 0.02,
                       af_maximum: float = 0.2) -> Series:
+        """Calculate the Parabolic Stop and Reverse (SAR) for trend following.
+
+        Auto-detects Close, High, and Low columns from the DataFrame.
+        Pass explicit Series to override auto-detection.
+
+        Parameters
+        ----------
+        close : pandas.Series, optional
+            Close prices. Auto-detected from DataFrame if not provided.
+        high : pandas.Series, optional
+            High prices. Auto-detected from DataFrame if not provided.
+        low : pandas.Series, optional
+            Low prices. Auto-detected from DataFrame if not provided.
+        af_start : float, default 0.02
+            Initial acceleration factor.
+        af_increment : float, default 0.02
+            Increment added to acceleration factor when a new extreme point is
+            reached.
+        af_maximum : float, default 0.2
+            Maximum acceleration factor value.
+
+        Returns
+        -------
+        pandas.Series
+            A Series containing Parabolic SAR values.
+        """
+        close_s = self._get_series(close, 'close', 'close')
         high_s = self._get_series(high, 'high', 'high')
         low_s = self._get_series(low, 'low', 'low')
-        return self._get_close_indicators(close).parabolic_sar(
-            high=high_s, low=low_s, af_start=af_start,
-            af_increment=af_increment, af_maximum=af_maximum)
+
+        # Initialize arrays
+        length = len(close_s)
+        sar = numpy.zeros(length)
+        trend = numpy.zeros(length, dtype=int)
+        af = numpy.zeros(length)
+        ep = numpy.zeros(length)
+
+        # Initialize first values
+        sar[0] = float(low_s.iloc[0])
+        trend[0] = 1
+        af[0] = af_start
+        ep[0] = float(high_s.iloc[0])
+
+        for i in range(1, length):
+            prev_sar = sar[i - 1]
+            prev_trend = trend[i - 1]
+            prev_af = af[i - 1]
+            prev_ep = ep[i - 1]
+
+            if prev_trend == 1:  # Uptrend
+                sar[i] = prev_sar + prev_af * (prev_ep - prev_sar)
+
+                if float(low_s.iloc[i]) <= sar[i]:
+                    trend[i] = -1
+                    sar[i] = prev_ep
+                    af[i] = af_start
+                    ep[i] = float(low_s.iloc[i])
+                else:
+                    trend[i] = 1
+
+                    if float(high_s.iloc[i]) > prev_ep:
+                        ep[i] = float(high_s.iloc[i])
+                        af[i] = min(prev_af + af_increment, af_maximum)
+                    else:
+                        ep[i] = prev_ep
+                        af[i] = prev_af
+
+                    sar[i] = min(sar[i], float(low_s.iloc[i - 1]))
+                    if i >= 2:
+                        sar[i] = min(sar[i], float(low_s.iloc[i - 2]))
+
+            else:  # Downtrend
+                sar[i] = prev_sar + prev_af * (prev_ep - prev_sar)
+
+                if float(high_s.iloc[i]) >= sar[i]:
+                    trend[i] = 1
+                    sar[i] = prev_ep
+                    af[i] = af_start
+                    ep[i] = float(high_s.iloc[i])
+                else:
+                    trend[i] = -1
+
+                    if float(low_s.iloc[i]) < prev_ep:
+                        ep[i] = float(low_s.iloc[i])
+                        af[i] = min(prev_af + af_increment, af_maximum)
+                    else:
+                        ep[i] = prev_ep
+                        af[i] = prev_af
+
+                    sar[i] = max(sar[i], float(high_s.iloc[i - 1]))
+                    if i >= 2:
+                        sar[i] = max(sar[i], float(high_s.iloc[i - 2]))
+
+        return pandas.Series(sar, index=close_s.index)

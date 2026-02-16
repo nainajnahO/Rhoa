@@ -47,15 +47,17 @@ Rhoa offers two ways to access indicators:
    # Override auto-detection with explicit params
    atr_custom = df.rhoa.indicators.atr(close=df['Adj Close'], window_size=14)
 
-**Series accessor** — call on a single column and pass others explicitly:
+**Series accessor** — call on a single column for single-series indicators:
 
 .. code-block:: python
 
    # Series-level: you choose which column to call on
    sma = df['Close'].rhoa.indicators.sma(window_size=20)
 
-   # OHLC indicators require passing high/low explicitly
-   atr = df['Close'].rhoa.indicators.atr(df['High'], df['Low'], window_size=14)
+.. note::
+   OHLC indicators (ATR, CCI, Stochastic, Williams %R, ADX, Parabolic SAR) are
+   only available via the DataFrame accessor. Single-series indicators (SMA, EWMA,
+   EWMV, EWMSTD, RSI, MACD, Bollinger Bands) work on both.
 
 Column auto-detection is case-insensitive. For the close column, ``Adj Close`` is also checked as a fallback.
 

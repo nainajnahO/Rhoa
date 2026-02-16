@@ -250,7 +250,8 @@ class TestIndicatorsAccessor(TestCase):
 
     def test_atr(self):
         """Test Average True Range indicator"""
-        result = self.price_data.rhoa.indicators.atr(self.high_data, self.low_data, window_size=14)
+        df = self.df.iloc[:100]
+        result = df.rhoa.indicators.atr(window_size=14)
         self.assertIsInstance(result, pd.Series)
 
         # ATR should be non-negative
@@ -258,9 +259,9 @@ class TestIndicatorsAccessor(TestCase):
         self.assertTrue((valid_values >= 0).all())
 
         # Manual calculation verification for first few values
-        high = self.high_data
-        low = self.low_data
-        close = self.price_data
+        high = df['High']
+        low = df['Low']
+        close = df['Close']
 
         high_low = high - low
         high_close = (high - close.shift(1)).abs()
@@ -273,24 +274,25 @@ class TestIndicatorsAccessor(TestCase):
 
         # Edge cases
         # When high = low = close (no volatility)
-        flat_high = pd.Series([100.0] * 50)
-        flat_low = pd.Series([100.0] * 50)
-        flat_close = pd.Series([100.0] * 50)
+        flat_df = pd.DataFrame({
+            'High': [100.0] * 50, 'Low': [100.0] * 50, 'Close': [100.0] * 50
+        })
 
-        flat_atr = flat_close.rhoa.indicators.atr(flat_high, flat_low, window_size=14)
+        flat_atr = flat_df.rhoa.indicators.atr(window_size=14)
         valid_flat = flat_atr.dropna()
         if len(valid_flat) > 0:
             self.assertTrue(all(abs(val) < 1e-10 for val in valid_flat))
 
     def test_cci(self):
         """Test Commodity Channel Index indicator"""
-        result = self.price_data.rhoa.indicators.cci(self.high_data, self.low_data, window_size=20)
+        df = self.df.iloc[:100]
+        result = df.rhoa.indicators.cci(window_size=20)
         self.assertIsInstance(result, pd.Series)
 
         # Manual calculation verification
-        close = self.price_data
-        high = self.high_data
-        low = self.low_data
+        close = df['Close']
+        high = df['High']
+        low = df['Low']
 
         typical_price = (high + low + close) / 3
         sma = typical_price.rolling(window=20).mean()
@@ -312,11 +314,11 @@ class TestIndicatorsAccessor(TestCase):
 
         # Edge cases
         # Constant prices should give CCI near zero (after initial period)
-        const_high = pd.Series([100.0] * 50)
-        const_low = pd.Series([100.0] * 50)
-        const_close = pd.Series([100.0] * 50)
+        const_df = pd.DataFrame({
+            'High': [100.0] * 50, 'Low': [100.0] * 50, 'Close': [100.0] * 50
+        })
 
-        const_cci = const_close.rhoa.indicators.cci(const_high, const_low, window_size=20)
+        const_cci = const_df.rhoa.indicators.cci(window_size=20)
         # For constant prices, mean deviation approaches zero, so CCI is undefined
         # The implementation should handle this gracefully
         valid_const = const_cci.dropna()
@@ -324,7 +326,8 @@ class TestIndicatorsAccessor(TestCase):
 
     def test_stochastic(self):
         """Test Stochastic Oscillator (%K and %D)"""
-        result = self.price_data.rhoa.indicators.stochastic(self.high_data, self.low_data, k_window=14, d_window=3)
+        df = self.df.iloc[:100]
+        result = df.rhoa.indicators.stochastic(k_window=14, d_window=3)
         self.assertIsInstance(result, pd.DataFrame)
 
         # Check correct columns
@@ -353,9 +356,9 @@ class TestIndicatorsAccessor(TestCase):
                 )
 
         # Manual calculation verification
-        close = self.price_data
-        high = self.high_data
-        low = self.low_data
+        close = df['Close']
+        high = df['High']
+        low = df['Low']
 
         lowest_low = low.rolling(window=14).min()
         highest_high = high.rolling(window=14).max()
@@ -365,11 +368,11 @@ class TestIndicatorsAccessor(TestCase):
 
         # Edge cases
         # Constant prices should give %K = middle value
-        const_high = pd.Series([100.0] * 50)
-        const_low = pd.Series([95.0] * 50)
-        const_close = pd.Series([97.5] * 50)  # Middle of range
+        const_df = pd.DataFrame({
+            'High': [100.0] * 50, 'Low': [95.0] * 50, 'Close': [97.5] * 50
+        })
 
-        const_stoch = const_close.rhoa.indicators.stochastic(const_high, const_low, k_window=14, d_window=3)
+        const_stoch = const_df.rhoa.indicators.stochastic(k_window=14, d_window=3)
         valid_const = const_stoch.dropna()
         if len(valid_const) > 0:
             # Should be 50% of the range
@@ -377,7 +380,8 @@ class TestIndicatorsAccessor(TestCase):
 
     def test_williams_r(self):
         """Test Williams %R indicator"""
-        result = self.price_data.rhoa.indicators.williams_r(self.high_data, self.low_data, window_size=14)
+        df = self.df.iloc[:100]
+        result = df.rhoa.indicators.williams_r(window_size=14)
         self.assertIsInstance(result, pd.Series)
 
         # Williams %R should be between -100 and 0
@@ -387,9 +391,9 @@ class TestIndicatorsAccessor(TestCase):
             self.assertTrue((valid_values <= 0).all())
 
         # Manual calculation verification
-        close = self.price_data
-        high = self.high_data
-        low = self.low_data
+        close = df['Close']
+        high = df['High']
+        low = df['Low']
 
         highest_high = high.rolling(window=14).max()
         lowest_low = low.rolling(window=14).min()
@@ -399,25 +403,28 @@ class TestIndicatorsAccessor(TestCase):
 
         # Edge cases
         # When close = high, Williams %R should be 0
-        high_close = pd.Series([100.0] * 50)
-        low_close = pd.Series([95.0] * 50)
-        at_high = pd.Series([100.0] * 50)
+        at_high_df = pd.DataFrame({
+            'High': [100.0] * 50, 'Low': [95.0] * 50, 'Close': [100.0] * 50
+        })
 
-        high_wr = at_high.rhoa.indicators.williams_r(high_close, low_close, window_size=14)
+        high_wr = at_high_df.rhoa.indicators.williams_r(window_size=14)
         valid_high = high_wr.dropna()
         if len(valid_high) > 0:
             self.assertTrue(all(abs(val) < 1e-10 for val in valid_high))
 
         # When close = low, Williams %R should be -100
-        at_low = pd.Series([95.0] * 50)
-        low_wr = at_low.rhoa.indicators.williams_r(high_close, low_close, window_size=14)
+        at_low_df = pd.DataFrame({
+            'High': [100.0] * 50, 'Low': [95.0] * 50, 'Close': [95.0] * 50
+        })
+        low_wr = at_low_df.rhoa.indicators.williams_r(window_size=14)
         valid_low = low_wr.dropna()
         if len(valid_low) > 0:
             self.assertTrue(all(abs(val + 100) < 1e-10 for val in valid_low))
 
     def test_adx(self):
         """Test Average Directional Index (ADX) with +DI and -DI"""
-        result = self.price_data.rhoa.indicators.adx(self.high_data, self.low_data, window_size=14)
+        df = self.df.iloc[:100]
+        result = df.rhoa.indicators.adx(window_size=14)
         self.assertIsInstance(result, pd.DataFrame)
 
         # Check correct columns
@@ -435,9 +442,9 @@ class TestIndicatorsAccessor(TestCase):
             self.assertTrue((valid_values['ADX'] <= 150).all())  # Allow some margin
 
         # Test component calculations
-        close = self.price_data
-        high = self.high_data
-        low = self.low_data
+        close = df['Close']
+        high = df['High']
+        low = df['Low']
 
         # Verify True Range calculation (used in ADX)
         high_low = high - low
@@ -446,21 +453,23 @@ class TestIndicatorsAccessor(TestCase):
         true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
 
         # The calculation is complex, so we mainly test structure and bounds
-        self.assertEqual(len(result), len(self.price_data))
+        self.assertEqual(len(result), len(df))
 
         # Edge cases
         # Trending data should have higher ADX than sideways data
-        trending_adx = self.trending_up.rhoa.indicators.adx(
-            pd.Series(range(105, 155)),  # trending high
-            pd.Series(range(95, 145)),   # trending low
-            window_size=14
-        )
+        trending_df = pd.DataFrame({
+            'Close': range(1, 51),
+            'High': range(105, 155),
+            'Low': range(95, 145),
+        })
+        trending_adx = trending_df.rhoa.indicators.adx(window_size=14)
 
-        const_adx = self.constant_prices.rhoa.indicators.adx(
-            pd.Series([102.0] * 50),  # constant high
-            pd.Series([98.0] * 50),   # constant low
-            window_size=14
-        )
+        const_df = pd.DataFrame({
+            'Close': [100.0] * 50,
+            'High': [102.0] * 50,
+            'Low': [98.0] * 50,
+        })
+        const_adx = const_df.rhoa.indicators.adx(window_size=14)
 
         trend_adx_mean = trending_adx['ADX'].dropna().mean()
         const_adx_mean = const_adx['ADX'].dropna().mean()
@@ -470,9 +479,8 @@ class TestIndicatorsAccessor(TestCase):
 
     def test_parabolic_sar(self):
         """Test Parabolic SAR indicator"""
-        result = self.price_data.rhoa.indicators.parabolic_sar(
-            self.high_data,
-            self.low_data,
+        df = self.df.iloc[:100]
+        result = df.rhoa.indicators.parabolic_sar(
             af_start=0.02,
             af_increment=0.02,
             af_maximum=0.2
@@ -480,7 +488,7 @@ class TestIndicatorsAccessor(TestCase):
         self.assertIsInstance(result, pd.Series)
 
         # SAR should have same length as input
-        self.assertEqual(len(result), len(self.price_data))
+        self.assertEqual(len(result), len(df))
 
         # All SAR values should be finite
         valid_values = result.dropna()
@@ -488,8 +496,8 @@ class TestIndicatorsAccessor(TestCase):
 
         # SAR should generally be within reasonable range of price data
         if len(valid_values) > 0:
-            price_min = self.price_data.min()
-            price_max = self.price_data.max()
+            price_min = df['Close'].min()
+            price_max = df['Close'].max()
             price_range = price_max - price_min
 
             # Allow SAR to be outside price range but within reasonable bounds
@@ -501,13 +509,11 @@ class TestIndicatorsAccessor(TestCase):
             self.assertLess(sar_max, price_max + 2 * price_range)
 
         # Test different parameter combinations
-        sar_fast = self.price_data.rhoa.indicators.parabolic_sar(
-            self.high_data, self.low_data,
+        sar_fast = df.rhoa.indicators.parabolic_sar(
             af_start=0.04, af_increment=0.04, af_maximum=0.4
         )
 
-        sar_slow = self.price_data.rhoa.indicators.parabolic_sar(
-            self.high_data, self.low_data,
+        sar_slow = df.rhoa.indicators.parabolic_sar(
             af_start=0.01, af_increment=0.01, af_maximum=0.1
         )
 
@@ -517,78 +523,82 @@ class TestIndicatorsAccessor(TestCase):
 
         # Edge cases
         # Constant prices - SAR should stabilize
-        const_high = pd.Series([105.0] * 50)
-        const_low = pd.Series([95.0] * 50)
-        const_close = pd.Series([100.0] * 50)
+        const_df = pd.DataFrame({
+            'High': [105.0] * 50, 'Low': [95.0] * 50, 'Close': [100.0] * 50
+        })
 
-        const_sar = const_close.rhoa.indicators.parabolic_sar(const_high, const_low)
+        const_sar = const_df.rhoa.indicators.parabolic_sar()
         # Should not crash and produce reasonable values
         self.assertEqual(len(const_sar), 50)
 
         # Strong trending data
-        trend_high = pd.Series(range(100, 150))
-        trend_low = pd.Series(range(95, 145))
-        trend_close = pd.Series(range(98, 148))
+        trend_df = pd.DataFrame({
+            'High': range(100, 150),
+            'Low': range(95, 145),
+            'Close': range(98, 148),
+        })
 
-        trend_sar = trend_close.rhoa.indicators.parabolic_sar(trend_high, trend_low)
+        trend_sar = trend_df.rhoa.indicators.parabolic_sar()
         # Should track below the uptrend
         if len(trend_sar.dropna()) > 10:
             # In a strong uptrend, SAR should generally be below the closing prices
             recent_sar = trend_sar.iloc[-10:].mean()
-            recent_close = trend_close.iloc[-10:].mean()
+            recent_close = trend_df['Close'].iloc[-10:].mean()
             self.assertLess(recent_sar, recent_close)
 
     def test_kwargs_support(self):
         """Test that all new indicators support **kwargs parameter"""
         # Test that **kwargs are accepted without errors
+        df = self.df.iloc[:100]
 
         # Stochastic with extra rolling parameters
-        stoch_result = self.price_data.rhoa.indicators.stochastic(
-            self.high_data, self.low_data,
+        stoch_result = df.rhoa.indicators.stochastic(
             k_window=14, d_window=5,  # Fixed: d_window >= min_periods
             min_periods=3
         )
         self.assertIsInstance(stoch_result, pd.DataFrame)
 
         # Williams %R with extra rolling parameters
-        wr_result = self.price_data.rhoa.indicators.williams_r(
-            self.high_data, self.low_data,
+        wr_result = df.rhoa.indicators.williams_r(
             window_size=14, min_periods=5
         )
         self.assertIsInstance(wr_result, pd.Series)
 
         # ADX with extra ewm parameters
-        adx_result = self.price_data.rhoa.indicators.adx(
-            self.high_data, self.low_data,
+        adx_result = df.rhoa.indicators.adx(
             window_size=14, min_periods=5
         )
         self.assertIsInstance(adx_result, pd.DataFrame)
 
         # Parabolic SAR doesn't use rolling/ewm, so no extra kwargs to test
         # but verify it still works normally
-        sar_result = self.price_data.rhoa.indicators.parabolic_sar(
-            self.high_data, self.low_data
-        )
+        sar_result = df.rhoa.indicators.parabolic_sar()
         self.assertIsInstance(sar_result, pd.Series)
 
     def test_new_indicators_integration(self):
-        """Test that new indicators work with the accessor pattern properly"""
-        # Verify all new indicators are accessible through the accessor
-        self.assertTrue(hasattr(self.price_data.rhoa.indicators, 'stochastic'))
-        self.assertTrue(hasattr(self.price_data.rhoa.indicators, 'williams_r'))
-        self.assertTrue(hasattr(self.price_data.rhoa.indicators, 'adx'))
-        self.assertTrue(hasattr(self.price_data.rhoa.indicators, 'parabolic_sar'))
+        """Test that OHLC indicators are only on DataFrame accessor"""
+        # OHLC indicators should NOT be on Series accessor
+        self.assertFalse(hasattr(self.price_data.rhoa.indicators, 'stochastic'))
+        self.assertFalse(hasattr(self.price_data.rhoa.indicators, 'williams_r'))
+        self.assertFalse(hasattr(self.price_data.rhoa.indicators, 'adx'))
+        self.assertFalse(hasattr(self.price_data.rhoa.indicators, 'parabolic_sar'))
+        self.assertFalse(hasattr(self.price_data.rhoa.indicators, 'atr'))
+        self.assertFalse(hasattr(self.price_data.rhoa.indicators, 'cci'))
 
-        # Test with minimal data
-        small_data = self.price_data.iloc[:20]
-        small_high = self.high_data.iloc[:20]
-        small_low = self.low_data.iloc[:20]
+        # OHLC indicators should be on DataFrame accessor
+        df = self.df.iloc[:20]
+        self.assertTrue(hasattr(df.rhoa.indicators, 'stochastic'))
+        self.assertTrue(hasattr(df.rhoa.indicators, 'williams_r'))
+        self.assertTrue(hasattr(df.rhoa.indicators, 'adx'))
+        self.assertTrue(hasattr(df.rhoa.indicators, 'parabolic_sar'))
+        self.assertTrue(hasattr(df.rhoa.indicators, 'atr'))
+        self.assertTrue(hasattr(df.rhoa.indicators, 'cci'))
 
-        # All should work without crashing
-        stoch = small_data.rhoa.indicators.stochastic(small_high, small_low, k_window=5, d_window=3)
-        wr = small_data.rhoa.indicators.williams_r(small_high, small_low, window_size=5)
-        adx = small_data.rhoa.indicators.adx(small_high, small_low, window_size=5)
-        sar = small_data.rhoa.indicators.parabolic_sar(small_high, small_low)
+        # Test with minimal data via DataFrame accessor
+        stoch = df.rhoa.indicators.stochastic(k_window=5, d_window=3)
+        wr = df.rhoa.indicators.williams_r(window_size=5)
+        adx = df.rhoa.indicators.adx(window_size=5)
+        sar = df.rhoa.indicators.parabolic_sar()
 
         # Verify return types
         self.assertIsInstance(stoch, pd.DataFrame)
@@ -693,42 +703,6 @@ class TestDataFrameIndicators(TestCase):
         df_result = df.rhoa.indicators.bollinger_bands()
         pd.testing.assert_frame_equal(series_result, df_result)
 
-    def test_equivalence_atr(self):
-        df = self.df_100
-        series_result = df['Close'].rhoa.indicators.atr(df['High'], df['Low'], window_size=14)
-        df_result = df.rhoa.indicators.atr(window_size=14)
-        pd.testing.assert_series_equal(series_result, df_result, check_names=False)
-
-    def test_equivalence_cci(self):
-        df = self.df_100
-        series_result = df['Close'].rhoa.indicators.cci(df['High'], df['Low'], window_size=20)
-        df_result = df.rhoa.indicators.cci(window_size=20)
-        pd.testing.assert_series_equal(series_result, df_result, check_names=False)
-
-    def test_equivalence_stochastic(self):
-        df = self.df_100
-        series_result = df['Close'].rhoa.indicators.stochastic(df['High'], df['Low'], k_window=14)
-        df_result = df.rhoa.indicators.stochastic(k_window=14)
-        pd.testing.assert_frame_equal(series_result, df_result)
-
-    def test_equivalence_williams_r(self):
-        df = self.df_100
-        series_result = df['Close'].rhoa.indicators.williams_r(df['High'], df['Low'], window_size=14)
-        df_result = df.rhoa.indicators.williams_r(window_size=14)
-        pd.testing.assert_series_equal(series_result, df_result, check_names=False)
-
-    def test_equivalence_adx(self):
-        df = self.df_100
-        series_result = df['Close'].rhoa.indicators.adx(df['High'], df['Low'], window_size=14)
-        df_result = df.rhoa.indicators.adx(window_size=14)
-        pd.testing.assert_frame_equal(series_result, df_result)
-
-    def test_equivalence_parabolic_sar(self):
-        df = self.df_100
-        series_result = df['Close'].rhoa.indicators.parabolic_sar(df['High'], df['Low'])
-        df_result = df.rhoa.indicators.parabolic_sar()
-        pd.testing.assert_series_equal(series_result, df_result, check_names=False)
-
     # --- Error cases ---
 
     def test_missing_column_raises(self):
@@ -745,9 +719,9 @@ class TestDataFrameIndicators(TestCase):
 
     # --- Backward compat ---
 
-    def test_series_accessor_unchanged(self):
-        """Series accessor still works exactly as before."""
+    def test_series_accessor_single_series(self):
+        """Series accessor still works for single-series indicators."""
         df = self.df_100
-        result = df['Close'].rhoa.indicators.atr(df['High'], df['Low'], window_size=14)
+        result = df['Close'].rhoa.indicators.sma(window_size=20)
         self.assertIsInstance(result, pd.Series)
         self.assertEqual(len(result), len(df))
